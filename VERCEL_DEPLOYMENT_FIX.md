@@ -8,7 +8,7 @@ Add these environment variables to your Vercel project settings:
    - Example: `mongodb+srv://username:password@cluster.mongodb.net/database`
 
 2. **FRONTEND_URL**: Your Vercel domain
-   - Example: `https://oneclickfolio-new.vercel.app`
+   - Example: `https://oneclickfolio-new-git-master-giris-projects-75c3dbe7.vercel.app`
 
 3. **NODE_ENV**: Set to `production`
 
@@ -28,14 +28,20 @@ Add these environment variables to your Vercel project settings:
 
 1. ✅ **API Routes**: Restructured API routes for Vercel serverless functions
 2. ✅ **Dependencies**: Added server dependencies to root package.json
-3. ✅ **CORS**: Updated CORS configuration for your domain
+3. ✅ **CORS**: Updated CORS configuration for your correct domains
 4. ✅ **Database**: Added proper MongoDB connection handling
 5. ✅ **Vercel Config**: Simplified vercel.json configuration
+6. ✅ **Models**: Embedded models directly in API routes to avoid import issues
+
+## Your Domains:
+- `oneclickfolio-new-git-master-giris-projects-75c3dbe7.vercel.app`
+- `oneclickfolio-6v6y8viox-giris-projects-75c3dbe7.vercel.app`
 
 ## Next Steps:
 
 1. Add the environment variables to Vercel
-2. Redeploy your project
-3. Test the login functionality
+2. Commit and push these changes
+3. Redeploy your project
+4. Test the login functionality
 
 The login should now work properly!

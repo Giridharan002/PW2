@@ -2,7 +2,30 @@ import express from 'express';
 import mongoose from 'mongoose';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import User from '../../server/models/User.js';
+
+// Define User schema inline to avoid import path issues
+const userSchema = new mongoose.Schema({
+    name: { type: String, required: true, trim: true },
+    email: { type: String, required: true, unique: true, trim: true, lowercase: true },
+    sessionId: { type: String, unique: true, sparse: true },
+    portfolios: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Portfolio' }],
+    createdAt: { type: Date, default: Date.now },
+    updatedAt: { type: Date, default: Date.now }
+});
+
+// Update timestamp on save
+userSchema.pre('save', function (next) {
+    this.updatedAt = new Date();
+    next();
+});
+
+// Method to generate a simple session ID
+userSchema.methods.generateSession = function () {
+    this.sessionId = Math.random().toString(36).substring(2) + Date.now().toString(36);
+    return this.sessionId;
+};
+
+const User = mongoose.model('User', userSchema);
 
 dotenv.config();
 
@@ -11,9 +34,9 @@ const app = express();
 // CORS configuration
 const allowedOrigins = [
     process.env.FRONTEND_URL,
-    'https://oneclickfolio-opal.vercel.app',
-    'https://oneclickfolio-manis-projects-3c91d416.vercel.app',
-    /^https:\/\/oneclickfolio-.*\.vercel\.app$/,
+    'https://oneclickfolio-new-git-master-giris-projects-75c3dbe7.vercel.app',
+    'https://oneclickfolio-6v6y8viox-giris-projects-75c3dbe7.vercel.app',
+    /^https:\/\/oneclickfolio-.*-giris-projects-75c3dbe7\.vercel\.app$/,
     'http://localhost:5173',
     'http://localhost:5174',
     'http://localhost:3000'

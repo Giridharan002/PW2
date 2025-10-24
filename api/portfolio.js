@@ -2,8 +2,109 @@ import express from 'express';
 import mongoose from 'mongoose';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import Portfolio from '../../server/models/Portfolio.js';
-import User from '../../server/models/User.js';
+
+// Define User schema inline to avoid import path issues
+const userSchema = new mongoose.Schema({
+    name: { type: String, required: true, trim: true },
+    email: { type: String, required: true, unique: true, trim: true, lowercase: true },
+    sessionId: { type: String, unique: true, sparse: true },
+    portfolios: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Portfolio' }],
+    createdAt: { type: Date, default: Date.now },
+    updatedAt: { type: Date, default: Date.now }
+});
+
+// Define Portfolio schema inline
+const PortfolioSchema = new mongoose.Schema({
+    userId: {
+        type: String,
+        required: true,
+        index: true
+    },
+    urlSlug: {
+        type: String,
+        required: true,
+        unique: true,
+        index: true
+    },
+    title: {
+        type: String,
+        default: 'Professional Portfolio'
+    },
+    header: {
+        name: String,
+        shortAbout: String,
+        location: String,
+        photoUrl: String,
+        contacts: {
+            website: String,
+            email: String,
+            phone: String,
+            twitter: String,
+            linkedin: String,
+            github: String
+        },
+        skills: [String]
+    },
+    summary: String,
+    workExperience: [{
+        company: String,
+        link: String,
+        location: String,
+        contract: String,
+        title: String,
+        start: String,
+        end: String,
+        description: String
+    }],
+    education: [{
+        school: String,
+        degree: String,
+        start: String,
+        end: String
+    }],
+    themeKey: {
+        type: String,
+        default: 'indigoPurple'
+    },
+    personaType: {
+        type: String,
+        enum: ['academic', 'student', 'freelancer', 'professional', 'other'],
+        default: 'professional'
+    },
+    extraSections: [
+        {
+            key: String,
+            title: String,
+            items: [
+                {
+                    type: Object,
+                    default: {}
+                }
+            ]
+        }
+    ],
+    isPublished: {
+        type: Boolean,
+        default: false
+    },
+    createdAt: {
+        type: Date,
+        default: Date.now
+    },
+    updatedAt: {
+        type: Date,
+        default: Date.now
+    }
+});
+
+// Update timestamp on save
+PortfolioSchema.pre('save', function (next) {
+    this.updatedAt = new Date();
+    next();
+});
+
+const User = mongoose.model('User', userSchema);
+const Portfolio = mongoose.model('Portfolio', PortfolioSchema);
 
 dotenv.config();
 
@@ -12,9 +113,9 @@ const app = express();
 // CORS configuration
 const allowedOrigins = [
     process.env.FRONTEND_URL,
-    'https://oneclickfolio-opal.vercel.app',
-    'https://oneclickfolio-manis-projects-3c91d416.vercel.app',
-    /^https:\/\/oneclickfolio-.*\.vercel\.app$/,
+    'https://oneclickfolio-new-git-master-giris-projects-75c3dbe7.vercel.app',
+    'https://oneclickfolio-6v6y8viox-giris-projects-75c3dbe7.vercel.app',
+    /^https:\/\/oneclickfolio-.*-giris-projects-75c3dbe7\.vercel\.app$/,
     'http://localhost:5173',
     'http://localhost:5174',
     'http://localhost:3000'
