@@ -1,0 +1,28 @@
+# Node & build artifacts
+node_modules
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-store
+
+# Vite output
+/dist
+
+# Local env & editor
+.env*
+*.local
+.vscode
+.idea
+
+# Tests and scripts
+server/test/
+server/scripts/
+
+# Large assets / uploads
+server/eng.traineddata
+server/uploads/
+uploads/
+
+# Misc
+.DS_Store
+Thumbs.db

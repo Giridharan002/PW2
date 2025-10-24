@@ -1,0 +1,135 @@
+/* Portfolio Template Styles */
+
+/* Modern Templates */
+.template-modern-clean {
+  font-family: 'Inter', 'Segoe UI', sans-serif;
+  letter-spacing: -0.01em;
+}
+
+.template-modern-gradient {
+  font-family: 'Inter', 'Segoe UI', sans-serif;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+}
+
+/* Simple Templates */
+.template-simple-minimal {
+  font-family: 'Arial', sans-serif;
+  line-height: 1.8;
+}
+
+.template-simple-classic {
+  font-family: 'Georgia', serif;
+  line-height: 1.9;
+}
+
+/* Innovative Templates */
+.template-innovative-tech {
+  font-family: 'Courier New', monospace;
+  border-left: 4px solid #00ff00;
+}
+
+.template-innovative-creative {
+  font-family: 'Comic Sans MS', cursive;
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+/* Classic Templates */
+.template-classic-formal {
+  font-family: 'Times New Roman', serif;
+  line-height: 2;
+  padding: 2rem;
+}
+
+.template-classic-traditional {
+  font-family: 'Garamond', serif;
+  border: 2px solid #333;
+  padding: 2.5rem;
+}
+
+/* Elegant Templates */
+.template-elegant-luxury {
+  font-family: 'Playfair Display', serif;
+  letter-spacing: 0.03em;
+  padding: 3rem;
+}
+
+.template-elegant-sophisticated {
+  font-family: 'Didot', serif;
+  border-top: 3px double #000;
+  border-bottom: 3px double #000;
+  padding: 2rem 3rem;
+}
+
+/* Creative Templates */
+.template-creative-bold {
+  font-family: 'Impact', sans-serif;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.template-creative-artistic {
+  font-family: 'Brush Script MT', cursive;
+  border-radius: 15px;
+  box-shadow: 0 0 20px rgba(255, 105, 180, 0.3);
+}
+
+/* Bold Templates */
+.template-bold-vibrant {
+  font-family: 'Arial Black', sans-serif;
+  font-weight: 800;
+  border: 5px solid #ff6b6b;
+  padding: 2rem;
+}
+
+.template-bold-striking {
+  font-family: 'Verdana', sans-serif;
+  font-weight: 700;
+  background: linear-gradient(to right, #ff6b6b, #4ecdc4, #45b7d1);
+  padding: 2rem;
+}
+
+/* Minimal Templates */
+.template-minimal-zen {
+  font-family: 'Helvetica Neue', sans-serif;
+  line-height: 2;
+  padding: 3rem;
+  border: 1px solid #e0e0e0;
+}
+
+.template-minimal-nordic {
+  font-family: 'Avenir', sans-serif;
+  line-height: 1.9;
+  background: #fafafa;
+  padding: 2.5rem;
+}
+
+/* Professional Templates */
+.template-professional-corporate {
+  font-family: 'Calibri', sans-serif;
+  line-height: 1.6;
+  padding: 2rem;
+  border-left: 5px solid #003366;
+}
+
+.template-professional-executive {
+  font-family: 'Trebuchet MS', sans-serif;
+  line-height: 1.7;
+  padding: 2.5rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Section Spacing for all templates */
+[class*="template-"] .p-6 {
+  padding: 1.5rem;
+}
+
+[class*="template-"] h2 {
+  margin-bottom: 1rem;
+  font-weight: 600;
+}
+
+[class*="template-"] h3 {
+  font-weight: 500;
+}
