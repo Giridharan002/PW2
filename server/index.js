@@ -4,6 +4,8 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import authRoutes from './routes/auth.js';
 import portfolioRoutes from './routes/portfolio.js';
+import jobRoutes from './routes/jobs.js';
+import { initializeJobScheduler } from './utils/jobScheduler.js';
 import path from 'path';
 import fs from 'fs';
 
@@ -52,12 +54,17 @@ app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
 // Database connection
 mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/resume-portfolio')
-  .then(() => console.log('✅ Connected to MongoDB'))
+  .then(() => {
+    console.log('✅ Connected to MongoDB');
+    // Initialize job scheduler after DB connects
+    initializeJobScheduler();
+  })
   .catch(err => console.error('❌ MongoDB connection error:', err));
 
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api', portfolioRoutes);
+app.use('/api/jobs', jobRoutes);
 
 // Serve uploaded images statically
 const uploadsPath = path.join(process.cwd(), 'uploads');

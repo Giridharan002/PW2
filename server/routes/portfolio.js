@@ -3,8 +3,9 @@ import Portfolio from '../models/Portfolio.js';
 import User from '../models/User.js';
 import { pdfUpload, imageUpload } from '../middleware/upload.js';
 import pdfProcessor from '../utils/pdfProcessor.js';
-import geminiAI from '../utils/geminiAI.js';
+import groqAI from '../utils/groqAI.js';
 import { refineResumeData, extractFallbackContacts } from '../utils/resumeRefiner.js';
+import parseResumeFallback from '../utils/fallbackParser.js';
 
 const router = express.Router();
 
@@ -105,28 +106,35 @@ ${extractedText}
 
 Return only valid JSON, no additional text or formatting. Extract as much detail as possible from the resume text.`;
 
-    const result = await geminiAI.generateContent(prompt);
-    const response = await result.response;
-    let text = response.text().trim();
-
-    // Clean up the response to ensure it's valid JSON
-    if (text.startsWith('```json')) {
-      text = text.replace(/```json\n?/, '').replace(/\n?```$/, '');
-    }
-    if (text.startsWith('```')) {
-      text = text.replace(/```\n?/, '').replace(/\n?```$/, '');
-    }
+    const result = await groqAI.generateContent(prompt);
 
     let resumeData = {};
-    try {
-      resumeData = JSON.parse(text);
-    } catch (e) {
-      console.warn('⚠️ AI returned invalid JSON. Attempting minimal fallback contact extraction.');
-      resumeData = { header: { contacts: extractFallbackContacts(extractedText), skills: [] }, summary: '', workExperience: [], education: [] };
-    }
+    if (result && result.rateLimited) {
+      // Groq returned rate limit info; use local fallback parser
+      console.warn(`⚠️ Groq rate limit: using local fallback parser (retry after ${result.retryAfterSeconds}s)`);
+      resumeData = await parseResumeFallback(extractedText);
+    } else {
+      const response = await result.response;
+      let text = response.text().trim();
 
-    // Refine/normalize for consistent quality
-    resumeData = refineResumeData(resumeData);
+      // Clean up the response to ensure it's valid JSON
+      if (text.startsWith('```json')) {
+        text = text.replace(/```json\n?/, '').replace(/\n?```$/, '');
+      }
+      if (text.startsWith('```')) {
+        text = text.replace(/```\n?/, '').replace(/\n?```$/, '');
+      }
+
+      try {
+        resumeData = JSON.parse(text);
+      } catch (e) {
+        console.warn('⚠️ AI returned invalid JSON. Attempting minimal fallback contact extraction.');
+        resumeData = { header: { contacts: extractFallbackContacts(extractedText), skills: [] }, summary: '', workExperience: [], education: [] };
+      }
+
+      // Refine/normalize for consistent quality
+      resumeData = refineResumeData(resumeData);
+    }
 
     console.log('✅ Structured and refined data extracted');
 

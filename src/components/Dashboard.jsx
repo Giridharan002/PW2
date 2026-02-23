@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext.jsx';
 import { useNavigate } from 'react-router-dom';
 import portfolioService from '../services/portfolioService.js';
-import { FaPlus, FaEye, FaEdit, FaTrash, FaCopy, FaShare, FaDownload, FaPalette, FaCog, FaArrowRight, FaExclamationTriangle, FaCheck, FaTimes, FaUser, FaSignOutAlt, FaChevronDown } from 'react-icons/fa';
+import JobRecommendations from './JobRecommendations.jsx';
+import { FaPlus, FaEye, FaEdit, FaTrash, FaCopy, FaShare, FaDownload, FaPalette, FaCog, FaArrowRight, FaExclamationTriangle, FaCheck, FaTimes, FaUser, FaSignOutAlt, FaChevronDown, FaBriefcase } from 'react-icons/fa';
 
 const Dashboard = () => {
   const { user, logout } = useAuth();
@@ -13,6 +14,7 @@ const Dashboard = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [portfolioToDelete, setPortfolioToDelete] = useState(null);
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [activeTab, setActiveTab] = useState('portfolios'); // 'portfolios' or 'jobs'
 
   useEffect(() => {
     fetchPortfolios();
@@ -108,10 +110,10 @@ const Dashboard = () => {
       {/* Header */}
       <div className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 py-6">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between mb-6">
             <div>
               <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-              <p className="text-gray-600 mt-1">Manage your professional portfolios</p>
+              <p className="text-gray-600 mt-1">Manage your portfolios and discover matching job opportunities</p>
             </div>
             <div className="flex items-center gap-4">
               <button
@@ -153,12 +155,38 @@ const Dashboard = () => {
               </div>
             </div>
           </div>
+
+          {/* Tabs */}
+          <div className="flex gap-2 border-b border-gray-200">
+            <button
+              onClick={() => setActiveTab('portfolios')}
+              className={`px-4 py-3 font-medium border-b-2 transition-colors flex items-center gap-2 ${
+                activeTab === 'portfolios'
+                  ? 'text-blue-600 border-blue-600'
+                  : 'text-gray-600 border-transparent hover:text-gray-900'
+              }`}
+            >
+              <FaEye className="text-sm" />
+              My Portfolios
+            </button>
+            <button
+              onClick={() => setActiveTab('jobs')}
+              className={`px-4 py-3 font-medium border-b-2 transition-colors flex items-center gap-2 ${
+                activeTab === 'jobs'
+                  ? 'text-blue-600 border-blue-600'
+                  : 'text-gray-600 border-transparent hover:text-gray-900'
+              }`}
+            >
+              <FaBriefcase className="text-sm" />
+              Recommended Jobs
+            </button>
+          </div>
         </div>
       </div>
 
       {/* Content */}
       <div className="max-w-7xl mx-auto px-4 py-8">
-        {error && (
+        {error && !activeTab.includes('jobs') && (
           <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
             <div className="flex items-center gap-2">
               <FaExclamationTriangle className="text-red-600" />
@@ -167,120 +195,129 @@ const Dashboard = () => {
           </div>
         )}
 
-        {portfolios.length === 0 ? (
-          <div className="text-center py-12">
-            <div className="mx-auto h-24 w-24 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-              <FaPlus className="h-12 w-12 text-gray-400" />
-            </div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">No portfolios yet</h2>
-            <p className="text-gray-600 mb-6">Create your first professional portfolio to get started</p>
-            <button
-              onClick={() => window.location.href = '/create'}
-              className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 mx-auto"
-            >
-              <FaPlus />
-              Create Your First Portfolio
-            </button>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {portfolios.map((portfolio) => (
-              <div key={portfolio._id} className="bg-white rounded-lg shadow-sm border hover:shadow-md transition-shadow">
-                {/* Portfolio Header */}
-                <div className="p-6 border-b border-gray-200">
-                  <div className="flex items-start justify-between mb-2">
-                    <h3 className="text-lg font-semibold text-gray-900 truncate">
-                      {portfolio.header?.name || portfolio.title}
-                    </h3>
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${portfolio.isPublished
-                      ? 'bg-green-100 text-green-800'
-                      : 'bg-yellow-100 text-yellow-800'
-                      }`}>
-                      {portfolio.isPublished ? 'Published' : 'Draft'}
-                    </span>
-                  </div>
-                  <p className="text-gray-600 text-sm mb-3">
-                    {portfolio.header?.shortAbout || 'Professional portfolio'}
-                  </p>
-                  <div className="flex items-center gap-4 text-sm text-gray-500">
-                    <span>{portfolio.workExperience?.length || 0} experience</span>
-                    <span>{portfolio.education?.length || 0} education</span>
-                  </div>
+        {activeTab === 'portfolios' ? (
+          <>
+            {portfolios.length === 0 ? (
+              <div className="text-center py-12">
+                <div className="mx-auto h-24 w-24 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                  <FaPlus className="h-12 w-12 text-gray-400" />
                 </div>
-
-                {/* Portfolio Stats */}
-                <div className="p-6">
-                  <div className="grid grid-cols-2 gap-4 mb-4">
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-blue-600">
-                        {portfolio.header?.skills?.length || 0}
-                      </div>
-                      <div className="text-xs text-gray-600">Skills</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-green-600">
-                        {portfolio.workExperience?.length || 0}
-                      </div>
-                      <div className="text-xs text-gray-600">Positions</div>
-                    </div>
-                  </div>
-
-                  {/* Action Buttons */}
-                  <div className="flex flex-wrap gap-2">
-                    <button
-                      onClick={() => window.open(`/portfolio/${portfolio._id}`, '_blank')}
-                      className="flex-1 px-3 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 transition-colors flex items-center justify-center gap-1"
-                    >
-                      <FaEye className="text-xs" />
-                      View
-                    </button>
-                    <button
-                      onClick={() => {
-                        if (!portfolio.isPublished) {
-                          alert('This portfolio is not published yet. Please publish it first.');
-                          return;
-                        }
-                        window.open(`/public/${portfolio.urlSlug}`, '_blank');
-                      }}
-                      disabled={!portfolio.isPublished}
-                      className={`flex-1 px-3 py-2 rounded text-sm transition-colors flex items-center justify-center gap-1 ${portfolio.isPublished ? 'bg-green-600 text-white hover:bg-green-700' : 'bg-gray-300 text-gray-600 cursor-not-allowed'}`}
-                      title={portfolio.isPublished ? 'Open public page' : 'Publish first to enable'}
-                    >
-                      <FaShare className="text-xs" />
-                      Public
-                    </button>
-                    <button
-                      onClick={() => handleTogglePublish(portfolio)}
-                      className={`px-3 py-2 rounded text-sm transition-colors flex items-center justify-center gap-1 ${portfolio.isPublished
-                        ? 'bg-yellow-600 text-white hover:bg-yellow-700'
-                        : 'bg-green-600 text-white hover:bg-green-700'
-                        }`}
-                    >
-                      {portfolio.isPublished ? <FaTimes className="text-xs" /> : <FaCheck className="text-xs" />}
-                      {portfolio.isPublished ? 'Unpublish' : 'Publish'}
-                    </button>
-                    <button
-                      onClick={() => handleDuplicatePortfolio(portfolio)}
-                      className="px-3 py-2 bg-purple-600 text-white rounded text-sm hover:bg-purple-700 transition-colors flex items-center justify-center gap-1"
-                    >
-                      <FaCopy className="text-xs" />
-                      Copy
-                    </button>
-                    <button
-                      onClick={() => {
-                        setPortfolioToDelete(portfolio);
-                        setShowDeleteModal(true);
-                      }}
-                      className="px-3 py-2 bg-red-600 text-white rounded text-sm hover:bg-red-700 transition-colors flex items-center justify-center gap-1"
-                    >
-                      <FaTrash className="text-xs" />
-                      Delete
-                    </button>
-                  </div>
-                </div>
+                <h2 className="text-2xl font-bold text-gray-900 mb-2">No portfolios yet</h2>
+                <p className="text-gray-600 mb-6">Create your first professional portfolio to get started</p>
+                <button
+                  onClick={() => window.location.href = '/create'}
+                  className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 mx-auto"
+                >
+                  <FaPlus />
+                  Create Your First Portfolio
+                </button>
               </div>
-            ))}
-          </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {portfolios.map((portfolio) => (
+                  <div key={portfolio._id} className="bg-white rounded-lg shadow-sm border hover:shadow-md transition-shadow">
+                    {/* Portfolio Header */}
+                    <div className="p-6 border-b border-gray-200">
+                      <div className="flex items-start justify-between mb-2">
+                        <h3 className="text-lg font-semibold text-gray-900 truncate">
+                          {portfolio.header?.name || portfolio.title}
+                        </h3>
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${portfolio.isPublished
+                          ? 'bg-green-100 text-green-800'
+                          : 'bg-yellow-100 text-yellow-800'
+                          }`}>
+                          {portfolio.isPublished ? 'Published' : 'Draft'}
+                        </span>
+                      </div>
+                      <p className="text-gray-600 text-sm mb-3">
+                        {portfolio.header?.shortAbout || 'Professional portfolio'}
+                      </p>
+                      <div className="flex items-center gap-4 text-sm text-gray-500">
+                        <span>{portfolio.workExperience?.length || 0} experience</span>
+                        <span>{portfolio.education?.length || 0} education</span>
+                      </div>
+                    </div>
+
+                    {/* Portfolio Stats */}
+                    <div className="p-6">
+                      <div className="grid grid-cols-2 gap-4 mb-4">
+                        <div className="text-center">
+                          <div className="text-2xl font-bold text-blue-600">
+                            {portfolio.header?.skills?.length || 0}
+                          </div>
+                          <div className="text-xs text-gray-600">Skills</div>
+                        </div>
+                        <div className="text-center">
+                          <div className="text-2xl font-bold text-green-600">
+                            {portfolio.workExperience?.length || 0}
+                          </div>
+                          <div className="text-xs text-gray-600">Positions</div>
+                        </div>
+                      </div>
+
+                      {/* Action Buttons */}
+                      <div className="flex flex-wrap gap-2">
+                        <button
+                          onClick={() => window.open(`/portfolio/${portfolio._id}`, '_blank')}
+                          className="flex-1 px-3 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 transition-colors flex items-center justify-center gap-1"
+                        >
+                          <FaEye className="text-xs" />
+                          View
+                        </button>
+                        <button
+                          onClick={() => {
+                            if (!portfolio.isPublished) {
+                              alert('This portfolio is not published yet. Please publish it first.');
+                              return;
+                            }
+                            window.open(`/public/${portfolio.urlSlug}`, '_blank');
+                          }}
+                          disabled={!portfolio.isPublished}
+                          className={`flex-1 px-3 py-2 rounded text-sm transition-colors flex items-center justify-center gap-1 ${portfolio.isPublished ? 'bg-green-600 text-white hover:bg-green-700' : 'bg-gray-300 text-gray-600 cursor-not-allowed'}`}
+                          title={portfolio.isPublished ? 'Open public page' : 'Publish first to enable'}
+                        >
+                          <FaShare className="text-xs" />
+                          Public
+                        </button>
+                        <button
+                          onClick={() => handleTogglePublish(portfolio)}
+                          className={`px-3 py-2 rounded text-sm transition-colors flex items-center justify-center gap-1 ${portfolio.isPublished
+                            ? 'bg-yellow-600 text-white hover:bg-yellow-700'
+                            : 'bg-green-600 text-white hover:bg-green-700'
+                            }`}
+                        >
+                          {portfolio.isPublished ? <FaTimes className="text-xs" /> : <FaCheck className="text-xs" />}
+                          {portfolio.isPublished ? 'Unpublish' : 'Publish'}
+                        </button>
+                        <button
+                          onClick={() => handleDuplicatePortfolio(portfolio)}
+                          className="px-3 py-2 bg-purple-600 text-white rounded text-sm hover:bg-purple-700 transition-colors flex items-center justify-center gap-1"
+                        >
+                          <FaCopy className="text-xs" />
+                          Copy
+                        </button>
+                        <button
+                          onClick={() => {
+                            setPortfolioToDelete(portfolio);
+                            setShowDeleteModal(true);
+                          }}
+                          className="px-3 py-2 bg-red-600 text-white rounded text-sm hover:bg-red-700 transition-colors flex items-center justify-center gap-1"
+                        >
+                          <FaTrash className="text-xs" />
+                          Delete
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </>
+        ) : (
+          <JobRecommendations 
+            sessionId={user?.sessionId} 
+            apiBaseUrl="http://localhost:5000"
+          />
         )}
       </div>
 

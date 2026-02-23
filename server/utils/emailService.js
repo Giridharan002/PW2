@@ -1,38 +1,14 @@
-import nodemailer from 'nodemailer';
+import { Resend } from 'resend';
+import dotenv from 'dotenv';
 
-// Create transporter (you'll need to configure this with your email service)
+dotenv.config();
+
+const resend = new Resend(process.env.RESEND_API_KEY);
+
+// Fallback nodemailer for backward compatibility (if needed)
 const createTransporter = () => {
-    // Check if email is configured
-    const emailUser = process.env.EMAIL_USER;
-    const emailPass = process.env.EMAIL_PASS;
-
-    if (!emailUser || !emailPass || emailUser === 'your-email@gmail.com') {
-        console.log('⚠️ Email not configured. Using console fallback for testing.');
-        return null;
-    }
-
-    // For development, you can use Gmail or other services
-    // For production, consider using services like SendGrid, Mailgun, etc.
-
-    // Gmail example (you'll need to enable "Less secure app access" or use App Password)
-    return nodemailer.createTransporter({
-        service: 'gmail',
-        auth: {
-            user: emailUser,
-            pass: emailPass
-        }
-    });
-
-    // Alternative: SendGrid
-    // return nodemailer.createTransporter({
-    //   host: 'smtp.sendgrid.net',
-    //   port: 587,
-    //   secure: false,
-    //   auth: {
-    //     user: 'apikey',
-    //     pass: process.env.SENDGRID_API_KEY
-    //   }
-    // });
+    // This is now a fallback - Resend is the primary method
+    return null;
 };
 
 // Send OTP email
@@ -230,6 +206,90 @@ export const sendPasswordResetEmail = async (email, resetToken, name) => {
         return { success: true, messageId: result.messageId };
     } catch (error) {
         console.error('❌ Failed to send password reset email:', error);
+        return { success: false, error: error.message };
+    }
+};
+
+// Send daily job digest email
+export const sendJobDigestEmail = async (email, name, jobs = []) => {
+    try {
+        if (!process.env.RESEND_API_KEY) {
+            console.log('⚠️ Resend API key not configured. Using console fallback.');
+            console.log('📧 [EMAIL FALLBACK] Job digest email would be sent to:', email);
+            console.log('   Jobs count:', jobs.length);
+            return { success: true, messageId: 'console-fallback' };
+        }
+
+        if (!jobs || jobs.length === 0) {
+            console.log('ℹ️ No new jobs to send to:', email);
+            return { success: true, messageId: 'no-jobs' };
+        }
+
+        const jobsHtml = jobs.slice(0, 10).map((job, idx) => `
+            <div style="border: 1px solid #e0e0e0; border-radius: 8px; padding: 20px; margin-bottom: 15px; background: white;">
+                <h3 style="color: #667eea; margin: 0 0 10px 0; font-size: 18px;">${job.title || 'Job Title'}</h3>
+                <p style="color: #666; margin: 5px 0; font-weight: bold;">📍 ${job.company || 'Company Name'}</p>
+                <p style="color: #999; margin: 5px 0; font-size: 14px;">📍 ${job.location || 'Remote'}</p>
+                <p style="color: #666; margin: 15px 0; line-height: 1.6;">${(job.description || '').substring(0, 200)}...</p>
+                <a href="${job.sourceUrl || '#'}" style="background: #667eea; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block; font-size: 14px;">View Job</a>
+            </div>
+        `).join('');
+
+        const html = `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center; color: white;">
+            <h1 style="margin: 0; font-size: 28px;">💼 Your Daily Job Digest</h1>
+            <p style="margin: 10px 0 0 0; opacity: 0.9;">${jobs.length} new opportunities matching your profile</p>
+          </div>
+          
+          <div style="padding: 30px; background: #f8f9fa;">
+            <h2 style="color: #333; margin-bottom: 20px;">Hello ${name}!</h2>
+            
+            <p style="color: #666; line-height: 1.6; margin-bottom: 25px;">
+              We found ${jobs.length} new job opportunities that match your skills and experience. 
+              Check them out below and apply to positions that interest you!
+            </p>
+            
+            ${jobsHtml}
+            
+            <div style="text-align: center; margin-top: 30px;">
+              <a href="${process.env.FRONTEND_URL || 'http://localhost:3000'}/jobs" 
+                 style="background: #667eea; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block; font-weight: bold;">
+                View All Jobs
+              </a>
+            </div>
+            
+            <p style="color: #999; font-size: 12px; margin-top: 30px; text-align: center;">
+              You're receiving this email because you're a registered user. 
+              <a href="${process.env.FRONTEND_URL || 'http://localhost:3000'}/settings" style="color: #667eea; text-decoration: none;">Manage email preferences</a>
+            </p>
+            
+            <div style="text-align: center; margin-top: 20px;">
+              <p style="color: #999; font-size: 14px;">
+                Best regards,<br>
+                The Portfolio Creator Team
+              </p>
+            </div>
+          </div>
+        </div>
+      `;
+
+        const result = await resend.emails.send({
+            from: 'OneClickFolio <onboarding@resend.dev>',
+            to: email,
+            subject: `Daily Job Digest - ${jobs.length} New Opportunities For You!`,
+            html: html
+        });
+
+        if (result.error) {
+            console.error('❌ Resend error:', result.error);
+            return { success: false, error: result.error };
+        }
+
+        console.log('✅ Job digest email sent to:', email, `(${jobs.length} jobs)`);
+        return { success: true, messageId: result.data?.id, jobsCount: jobs.length };
+    } catch (error) {
+        console.error('❌ Failed to send job digest email:', error);
         return { success: false, error: error.message };
     }
 };

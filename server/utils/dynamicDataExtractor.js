@@ -1,4 +1,4 @@
-import geminiAI from './geminiAI.js';
+import groqAI from './groqAI.js';
 
 class DynamicDataExtractor {
   constructor() {
@@ -100,7 +100,7 @@ class DynamicDataExtractor {
     `;
 
     try {
-      const result = await geminiAI.model.generateContent(prompt);
+      const result = await groqAI.model.generateContent(prompt);
       const response = await result.response;
       let cleanedResult = response.text().trim();
       
@@ -190,7 +190,7 @@ class DynamicDataExtractor {
     `;
 
     try {
-      const result = await geminiAI.model.generateContent(prompt);
+      const result = await groqAI.model.generateContent(prompt);
       const response = await result.response;
       let cleanedResult = response.text().trim();
       

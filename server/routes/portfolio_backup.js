@@ -4,7 +4,7 @@ import User from '../models/User.js';
 import upload from '../middleware/upload.js';
 import dataValidator from '../utils/dataValidator.js';
 import pdfProcessor from '../utils/pdfProcessor.js';
-import geminiAI from '../utils/geminiAI.js';
+import groqAI from '../utils/groqAI.js';
 import aiEnhancer from '../utils/aiEnhancer.js';
 
 const router = express.Router();
@@ -486,9 +486,9 @@ router.get('/validation/:id', async (req, res) => {
 // Test API key endpoint
 router.get('/test-api', async (req, res) => {
   try {
-    const { GoogleGenerativeAI } = await import('@google/generative-ai');
+    const Groq = await import('groq-sdk').then(m => m.default);
     
-    const apiKey = process.env.GEMINI_API_KEY;
+    const apiKey = process.env.GROQ_API_KEY;
     
     if (!apiKey) {
       return res.json({
@@ -497,12 +497,20 @@ router.get('/test-api', async (req, res) => {
       });
     }
     
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const groq = new Groq({ apiKey });
     
-    const result = await model.generateContent("Say 'API key works perfectly!' in one sentence");
-    const response = await result.response;
-    const text = response.text();
+    const message = await groq.chat.completions.create({
+      model: "llama-3.3-70b-versatile",
+      max_tokens: 100,
+      messages: [
+        {
+          role: "user",
+          content: "Say 'API key works perfectly!' in one sentence"
+        }
+      ]
+    });
+    
+    const text = message.content[0].type === 'text' ? message.content[0].text : '';
     
     res.json({
       success: true,
