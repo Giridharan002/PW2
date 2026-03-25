@@ -1,0 +1,53 @@
+
+C:\Users\dharu\Desktop\one\Oneclickfolio\Oneclickfolio\src\App_backup.jsx
+  2:8  error  Parsing error: Identifier 'React' has already been declared
+
+C:\Users\dharu\Desktop\one\Oneclickfolio\Oneclickfolio\src\components\Achievements.jsx
+  5:49  error  'editData' is defined but never used  no-unused-vars
+
+C:\Users\dharu\Desktop\one\Oneclickfolio\Oneclickfolio\src\components\Certifications.jsx
+  4:51  error  'editData' is defined but never used  no-unused-vars
+
+C:\Users\dharu\Desktop\one\Oneclickfolio\Oneclickfolio\src\components\Dashboard.jsx
+  21:6  warning  React Hook useEffect has a missing dependency: 'fetchPortfolios'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+C:\Users\dharu\Desktop\one\Oneclickfolio\Oneclickfolio\src\components\EditButtons.jsx
+  11:3  error  'editData' is defined but never used  no-unused-vars
+
+C:\Users\dharu\Desktop\one\Oneclickfolio\Oneclickfolio\src\components\Education.jsx
+  4:46  error  'editData' is defined but never used  no-unused-vars
+
+C:\Users\dharu\Desktop\one\Oneclickfolio\Oneclickfolio\src\components\Experience.jsx
+  4:47  error  'editData' is defined but never used  no-unused-vars
+
+C:\Users\dharu\Desktop\one\Oneclickfolio\Oneclickfolio\src\components\PDFUpload.jsx
+  8:39  error  'theme' is defined but never used  no-unused-vars
+
+C:\Users\dharu\Desktop\one\Oneclickfolio\Oneclickfolio\src\components\PortfolioDisplay.jsx
+   11:55  error  'onEdit' is defined but never used                                                                   no-unused-vars
+   11:63  error  'onDelete' is defined but never used                                                                 no-unused-vars
+   11:73  error  'onDuplicate' is defined but never used                                                              no-unused-vars
+   27:12  error  'saving' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u               no-unused-vars
+  194:11  error  'handleCancelEdit' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u     no-unused-vars
+  218:11  error  'handleSaveEdit' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u       no-unused-vars
+  344:11  error  'handleTogglePublish' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u  no-unused-vars
+
+C:\Users\dharu\Desktop\one\Oneclickfolio\Oneclickfolio\src\components\PortfolioEditModal.jsx
+  541:38  error  'sIndex' is defined but never used  no-unused-vars
+
+C:\Users\dharu\Desktop\one\Oneclickfolio\Oneclickfolio\src\components\Projects.jsx
+  5:45  error  'editData' is defined but never used  no-unused-vars
+
+C:\Users\dharu\Desktop\one\Oneclickfolio\Oneclickfolio\src\components\ThemeSelector.jsx
+   5:62  error  'colorMode' is defined but never used                                                             no-unused-vars
+  17:9   error  'currentThemeData' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u  no-unused-vars
+
+C:\Users\dharu\Desktop\one\Oneclickfolio\Oneclickfolio\src\components\TopNav.jsx
+  5:55  error  'colorMode' is defined but never used  no-unused-vars
+
+C:\Users\dharu\Desktop\one\Oneclickfolio\Oneclickfolio\src\context\AuthContext.jsx
+   5:14  warning  Fast refresh only works when a file only exports components. Move your React context(s) to a separate file                      react-refresh/only-export-components
+  97:14  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+✖ 22 problems (19 errors, 3 warnings)
+

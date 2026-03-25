@@ -144,7 +144,7 @@ Return ONLY valid JSON, no additional text.`;
     try {
       const result = await groqAI.generateContent(prompt);
       const responseText = result.response.text();
-      
+
       // Clean JSON response
       let jsonText = responseText.trim();
       if (jsonText.startsWith('```json')) {
@@ -155,7 +155,7 @@ Return ONLY valid JSON, no additional text.`;
       }
 
       const scoreData = JSON.parse(jsonText);
-      
+
       return {
         overallScore: scoreData.overallScore || 0,
         details: {
@@ -175,44 +175,112 @@ Return ONLY valid JSON, no additional text.`;
   }
 
   /**
-   * Fallback scoring if AI fails - basic skill matching
+   * Fallback scoring if AI fails - much stricter skill and title matching
    */
   fallbackScoring(userProfile, job) {
-    const userSkillsLower = userProfile.skills.map(s => s.toLowerCase());
-    const requiredSkillsLower = (job.requiredSkills || []).map(s => s.toLowerCase());
-    const preferredSkillsLower = (job.preferredSkills || []).map(s => s.toLowerCase());
+    const userSkillsLower = (userProfile.skills || []).map(s => s.trim().toLowerCase());
+    const requiredSkillsLower = (job.requiredSkills || []).map(s => s.trim().toLowerCase());
+    const preferredSkillsLower = (job.preferredSkills || []).map(s => s.trim().toLowerCase());
 
-    // Count skill matches
+    const jobTitleLower = (job.title || '').toLowerCase();
+    const userTitles = (userProfile.experience || []).map(exp => (exp.title || '').toLowerCase());
+
+    // 1. TITLE RELEVANCE (Crucial to filter out unrelated roles like "Social Media Manager" for a "Software Engineer")
+    let titleScore = 0;
+
+    // Extract meaningful keywords from job title, aggressively dropping generic corporate/resume buzzwords
+    const ignoreWords = [
+      'remote', 'senior', 'junior', 'lead', 'manager', 'm/w/d', 'associate', 'staff', 'principal',
+      'intern', 'internship', 'project', 'projects', 'specialist', 'assistant', 'worker', 'student',
+      'trainee', 'coordinator', 'professional', 'entry', 'level', 'part', 'full', 'time', 'co', 'location',
+      'working', 'analyst', 'employee', 'temporary', 'freelance', 'contract', 'engineer', 'developer',
+      'technician', 'consultant', 'advisor', 'officer', 'representative', 'executive'
+    ];
+
+    const titleWords = jobTitleLower
+      .split(/[\s,|/()-]+/)
+      .filter(w => w.length > 2 && !ignoreWords.includes(w));
+
+    const userTitleWords = userTitles
+      .flatMap(t => t.split(/[\s,|/()-]+/))
+      .filter(w => w.length > 2 && !ignoreWords.includes(w));
+
+    // A job is highly relevant if its CORE domain words matches past experience or skills.
+    // e.g. "React" matching "Frontend React Developer", or "Finance" matching "Corporate Finance"
+    // (Note: Since we filtered out generic roles like 'developer' or 'manager', we are mostly matching domains like 'python', 'finance', 'backend', 'marketing')
+    const matchesUserTitles = titleWords.some(w => userTitleWords.includes(w));
+    const matchesUserSkills = titleWords.some(w => userSkillsLower.some(skill => skill.includes(w) || w.includes(skill)));
+
+    if (matchesUserTitles) {
+      titleScore = 0.9;
+    } else if (matchesUserSkills) {
+      titleScore = 0.8;
+    } else {
+      // Heavier penalty if the title has ZERO overlap with their core professional domain words
+      titleScore = 0.05;
+    }
+
+    // 2. SKILL RELEVANCE
+    // Strict matching to avoid false positives (e.g., "man" matching "management")
+    const isMatch = (userSkill, reqSkill) => {
+      if (userSkill === reqSkill) return true;
+      if (userSkill.length > 3 && reqSkill.includes(userSkill)) return true;
+      if (reqSkill.length > 3 && userSkill.includes(reqSkill)) return true;
+      return false;
+    };
+
     const requiredMatches = requiredSkillsLower.filter(skill =>
-      userSkillsLower.some(userSkill => userSkill.includes(skill) || skill.includes(userSkill))
+      userSkillsLower.some(userSkill => isMatch(userSkill, skill))
     ).length;
 
     const preferredMatches = preferredSkillsLower.filter(skill =>
-      userSkillsLower.some(userSkill => userSkill.includes(skill) || skill.includes(userSkill))
+      userSkillsLower.some(userSkill => isMatch(userSkill, skill))
     ).length;
 
     const requiredScore = requiredSkillsLower.length > 0
       ? requiredMatches / requiredSkillsLower.length
-      : 0.5;
+      : 0.2; // Penalize if no skills listed but the title doesn't align
 
     const preferredScore = preferredSkillsLower.length > 0
       ? preferredMatches / preferredSkillsLower.length
-      : 0.5;
+      : 0.2;
 
-    const overallScore = (requiredScore * 0.7) + (preferredScore * 0.3);
+    // 3. DESCRIPTION-BASED SKILL MATCHING (catches relevant jobs with generic titles)
+    let descriptionScore = 0;
+    const descLower = (job.description || '').toLowerCase();
+    if (descLower.length > 50) {
+      const descSkillMatches = userSkillsLower.filter(skill =>
+        skill.length > 2 && descLower.includes(skill)
+      ).length;
+      // If multiple user skills appear in the job description, it's relevant
+      if (descSkillMatches >= 5) {
+        descriptionScore = 0.9;
+      } else if (descSkillMatches >= 3) {
+        descriptionScore = 0.7;
+      } else if (descSkillMatches >= 1) {
+        descriptionScore = 0.4;
+      }
+    }
+
+    // Weighting: 45% Title, 25% Required Skills, 10% Preferred Skills, 20% Description Match
+    // This way, even if the title is generic, strong description skill matches can push the score above 50%
+    let overallScore = (titleScore * 0.45) + (requiredScore * 0.25) + (preferredScore * 0.10) + (descriptionScore * 0.20);
+
+    // Minor bumps based on skills
+    if (requiredMatches >= 3) overallScore += 0.1;
 
     return {
-      overallScore,
+      overallScore: Math.min(overallScore, 0.99), // Cap at 99%
       details: {
+        titleMatch: Math.round(titleScore * 100),
         skillsMatch: Math.round(requiredScore * 100),
-        experienceMatch: 50,
-        locationMatch: 50,
+        descriptionMatch: Math.round(descriptionScore * 100),
         reasons: [
-          `${requiredMatches}/${requiredSkillsLower.length} required skills matched`,
-          `${preferredMatches}/${preferredSkillsLower.length} preferred skills matched`
-        ],
-        concerns: [],
-        recommendation: 'Skill-based match'
+          `Domain relevance: ${Math.round(titleScore * 100)}%`,
+          `${requiredMatches}/${requiredSkillsLower.length} core skills matched`,
+          `${preferredMatches}/${preferredSkillsLower.length} preferred skills matched`,
+          descriptionScore > 0 ? `Description skill match: ${Math.round(descriptionScore * 100)}%` : null
+        ].filter(Boolean)
       }
     };
   }
@@ -223,7 +291,7 @@ Return ONLY valid JSON, no additional text.`;
   async extractIdealJobTitles(portfolioData) {
     try {
       const { header = {}, workExperience = [], education = [] } = portfolioData;
-      
+
       // Build context from portfolio
       const currentRole = workExperience && workExperience[0] && workExperience[0].title ? workExperience[0].title : '';
       const skills = (header.skills || []).slice(0, 10).join(', ');
@@ -247,7 +315,7 @@ Return ONLY valid JSON in this format:
 Make sure titles are realistic job market positions.`;
 
       const result = await groqAI.generateContent(prompt);
-      
+
       // Check for rate limit
       if (result && result.rateLimited) {
         console.warn('⚠️ AI rate limit hit, using default job titles');
@@ -299,11 +367,11 @@ Make sure titles are realistic job market positions.`;
    */
   calculateYearsDuration(startDate, endDate) {
     if (!startDate) return 0;
-    
+
     const start = new Date(startDate);
     const end = endDate ? new Date(endDate) : new Date();
     const years = (end - start) / (1000 * 60 * 60 * 24 * 365.25);
-    
+
     return Math.round(years * 10) / 10;
   }
 
@@ -312,7 +380,7 @@ Make sure titles are realistic job market positions.`;
    */
   async getRecommendationsForUsers(users, jobListings, topN = 5) {
     const results = [];
-    
+
     for (const user of users) {
       try {
         const recommendations = await this.getJobRecommendations(
@@ -329,48 +397,11 @@ Make sure titles are realistic job market positions.`;
         console.error(`Error getting recommendations for user ${user.name}:`, error);
       }
     }
-    
+
     return results;
   }
 
-  /**
-   * Filter jobs by location
-   */
-  filterJobsByLocation(jobs, userLocation, radiusKm = null) {
-    if (!userLocation) return jobs;
-    
-    return jobs.filter(job => {
-      const jobLocation = (job.location || '').toLowerCase();
-      const userLoc = userLocation.toLowerCase();
-      
-      // Exact location match or remote
-      if (jobLocation.includes(userLoc) || jobLocation.includes('remote')) {
-        return true;
-      }
-      
-      // In real app, you'd use geolocation API
-      return false;
-    });
-  }
 
-  /**
-   * Filter jobs by experience level
-   */
-  filterJobsByExperience(jobs, userExperienceYears, flexibility = 2) {
-    return jobs.filter(job => {
-      if (!job.experience) return true;
-      
-      const expMatch = job.experience.match(/(\d+)-?(\d*)/);
-      if (!expMatch) return true;
-      
-      const minExp = parseInt(expMatch[1]);
-      const maxExp = expMatch[2] ? parseInt(expMatch[2]) : minExp + flexibility;
-      
-      // Allow flexibility in years of experience
-      return userExperienceYears >= (minExp - flexibility) && 
-             userExperienceYears <= (maxExp + flexibility);
-    });
-  }
 }
 
 export default new JobRecommendationService();

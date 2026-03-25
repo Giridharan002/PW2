@@ -19,30 +19,30 @@ class DynamicDataExtractor {
     // Field type detection patterns
     this.fieldTypePatterns = {
       email: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-      phone: /^[\+]?[\d\s\-\(\)]{10,}$/,
+      phone: /^[+]?[\d\s-()]{10,}$/,
       url: /^https?:\/\/|www\./,
-      date: /^\d{4}[-\/]\d{1,2}[-\/]\d{1,2}$|^\d{1,2}[-\/]\d{1,2}[-\/]\d{4}$|^[A-Za-z]{3,9}\s\d{4}$/,
+      date: /^\d{4}[-/]\d{1,2}[-/]\d{1,2}$|^\d{1,2}[-/]\d{1,2}[-/]\d{4}$|^[A-Za-z]{3,9}\s\d{4}$/,
       number: /^\d+\.?\d*$/
     };
   }
 
-  async extractDynamicStructure(resumeText, partialData = {}) {
+  async extractDynamicStructure(resumeText, _partialData = {}) {
     try {
       console.log('🚀 Starting dynamic structure extraction...');
-      
+
       // Step 1: Analyze the resume structure using AI
       const structureAnalysis = await this.analyzeResumeStructure(resumeText);
-      
+
       // Step 2: Extract sections dynamically
       const sections = await this.extractSections(resumeText, structureAnalysis);
-      
+
       // Step 3: Validate and enhance the extracted data
       const validatedSections = this.validateAndEnhanceSections(sections);
-      
+
       // Step 4: Calculate confidence and completeness scores
       const confidence = this.calculateConfidenceScore(validatedSections);
       const completeness = this.calculateCompletenessScore(validatedSections);
-      
+
       return {
         success: true,
         data: {
@@ -57,7 +57,7 @@ class DynamicDataExtractor {
           }
         }
       };
-      
+
     } catch (error) {
       console.error('❌ Dynamic extraction failed:', error);
       return {
@@ -103,14 +103,14 @@ class DynamicDataExtractor {
       const result = await groqAI.model.generateContent(prompt);
       const response = await result.response;
       let cleanedResult = response.text().trim();
-      
+
       // Clean up JSON response
       if (cleanedResult.startsWith('```json')) {
         cleanedResult = cleanedResult.replace(/```json\n?/, '').replace(/\n?```$/, '');
       }
-      
+
       return JSON.parse(cleanedResult);
-    } catch (error) {
+    } catch (_error) {
       console.warn('⚠️ Structure analysis failed, using fallback');
       return this.generateFallbackStructureAnalysis(resumeText);
     }
@@ -118,17 +118,17 @@ class DynamicDataExtractor {
 
   async extractSections(resumeText, structureAnalysis) {
     const sections = [];
-    
+
     for (const sectionInfo of structureAnalysis.detectedSections) {
       try {
         console.log(`🔍 Extracting section: ${sectionInfo.title}`);
-        
+
         const sectionData = await this.extractSectionData(
-          resumeText, 
-          sectionInfo, 
+          resumeText,
+          sectionInfo,
           structureAnalysis
         );
-        
+
         if (sectionData) {
           sections.push(sectionData);
         }
@@ -136,7 +136,7 @@ class DynamicDataExtractor {
         console.error(`❌ Failed to extract section ${sectionInfo.title}:`, error);
       }
     }
-    
+
     return sections;
   }
 
@@ -193,35 +193,38 @@ class DynamicDataExtractor {
       const result = await groqAI.model.generateContent(prompt);
       const response = await result.response;
       let cleanedResult = response.text().trim();
-      
+
       if (cleanedResult.startsWith('```json')) {
         cleanedResult = cleanedResult.replace(/```json\n?/, '').replace(/\n?```$/, '');
       }
-      
+
       // Enhanced JSON cleaning to handle malformed AI responses
       cleanedResult = cleanedResult
         .replace(/\/\/.*$/gm, '') // Remove single-line comments
         .replace(/\/\*[\s\S]*?\*\//g, '') // Remove multi-line comments
         .replace(/,\s*}/g, '}') // Remove trailing commas before }
         .replace(/,\s*]/g, ']') // Remove trailing commas before ]
+        // eslint-disable-next-line no-control-regex
         .replace(/[\x00-\x1F\x7F]/g, '') // Remove control characters
+        // eslint-disable-next-line no-control-regex
         .replace(/[\u0000-\u001F\u007F-\u009F]/g, '') // Remove additional control chars
-        .replace(/([^\\])\\([^"\\\/bfnrtuvxfad0-9])/g, '$1\\\\$2') // Fix invalid escape sequences
+        .replace(/([^\\])\\([^"\\/bfnrtuvxfad0-9])/g, '$1\\\\$2') // Fix invalid escape sequences
         .replace(/"\s*([^":\s,}]+)\s*"/g, '"$1"') // Fix spacing in strings
         .replace(/\bNaN\b/g, '""') // Replace NaN with empty string
         .replace(/\bundefined\b/g, '""') // Replace undefined with empty string
         .replace(/\bnull\b/g, '""') // Replace null with empty string
+        // eslint-disable-next-line no-useless-escape
         .replace(/([:{,\[]\s*)"?([a-zA-Z_][a-zA-Z0-9_]*)"?\s*:/g, '$1"$2":') // Fix unquoted keys
         .replace(/:\s*"([^"]*?)"\s*([,}])/g, ': "$1"$2') // Fix string values
         .trim();
-      
+
       let sectionData;
       try {
         sectionData = JSON.parse(cleanedResult);
       } catch (parseError) {
         console.error(`❌ JSON Parse Error for section ${sectionInfo.title}:`, parseError.message);
         console.error('Problematic JSON snippet:', cleanedResult.substring(0, 200) + '...');
-        
+
         // Try to extract just the core data with regex as fallback
         try {
           const fallbackData = this.extractFallbackSectionData(cleanedResult, sectionInfo);
@@ -232,7 +235,7 @@ class DynamicDataExtractor {
         } catch (fallbackError) {
           console.error(`❌ Fallback extraction also failed:`, fallbackError.message);
         }
-        
+
         // Return minimal valid structure as last resort
         return {
           title: sectionInfo.title,
@@ -244,13 +247,13 @@ class DynamicDataExtractor {
           fields: []
         };
       }
-      
+
       // Auto-detect field types
       this.autoDetectFieldTypes(sectionData);
-      
+
       // Clean up null values
       this.cleanupNullValues(sectionData);
-      
+
       return sectionData;
     } catch (error) {
       console.error(`Failed to extract ${sectionInfo.title} section:`, error);
@@ -264,11 +267,11 @@ class DynamicDataExtractor {
       // Try to extract basic structure using regex patterns
       const titleMatch = malformedJson.match(/"title":\s*"([^"]+)"/);
       const typeMatch = malformedJson.match(/"type":\s*"([^"]+)"/);
-      
+
       // Extract field values using regex
       const fieldMatches = [...malformedJson.matchAll(/"value":\s*"([^"]+)"/g)];
       const keyMatches = [...malformedJson.matchAll(/"key":\s*"([^"]+)"/g)];
-      
+
       const fields = [];
       for (let i = 0; i < Math.min(fieldMatches.length, keyMatches.length); i++) {
         if (fieldMatches[i] && keyMatches[i] && fieldMatches[i][1] && keyMatches[i][1]) {
@@ -283,7 +286,7 @@ class DynamicDataExtractor {
           });
         }
       }
-      
+
       return {
         title: titleMatch ? titleMatch[1] : sectionInfo.title,
         type: this.validateSectionType(typeMatch ? typeMatch[1] : 'custom'),
@@ -314,11 +317,11 @@ class DynamicDataExtractor {
       'research': 'projects',
       'award': 'achievements'
     };
-    
+
     if (validTypes.includes(type)) {
       return type;
     }
-    
+
     return typeMapping[type.toLowerCase()] || 'custom';
   }
 
@@ -329,7 +332,7 @@ class DynamicDataExtractor {
         field.type = this.detectFieldType(field.value, field.key);
       });
     }
-    
+
     // Process fields in items
     if (sectionData.items) {
       sectionData.items.forEach(item => {
@@ -344,28 +347,28 @@ class DynamicDataExtractor {
 
   detectFieldType(value, key) {
     if (!value) return 'text';
-    
+
     const valueStr = String(value);
     const keyLower = key.toLowerCase();
-    
+
     // Check patterns
     if (this.fieldTypePatterns.email.test(valueStr)) return 'email';
     if (this.fieldTypePatterns.phone.test(valueStr)) return 'phone';
     if (this.fieldTypePatterns.url.test(valueStr)) return 'url';
     if (this.fieldTypePatterns.date.test(valueStr)) return 'date';
     if (this.fieldTypePatterns.number.test(valueStr)) return 'number';
-    
+
     // Check by key name
     if (keyLower.includes('email')) return 'email';
     if (keyLower.includes('phone') || keyLower.includes('mobile')) return 'phone';
     if (keyLower.includes('url') || keyLower.includes('website') || keyLower.includes('link')) return 'url';
     if (keyLower.includes('date') || keyLower.includes('duration')) return 'date';
     if (keyLower.includes('description') || keyLower.includes('summary')) return 'richtext';
-    
+
     // Check for arrays
     if (Array.isArray(value)) return 'array';
     if (typeof value === 'object') return 'object';
-    
+
     return 'text';
   }
 
@@ -377,27 +380,27 @@ class DynamicDataExtractor {
       section.isVisible = section.isVisible !== false;
       section.layout = section.layout || 'single-column';
       section.metadata = section.metadata || new Map();
-      
+
       // Validate fields
       if (section.fields) {
         section.fields = this.validateFields(section.fields);
       }
-      
+
       // Validate items
       if (section.items) {
         section.items = section.items.map((item, itemIndex) => {
           item.id = item.id || `${section.id}-item-${itemIndex}`;
           item.order = item.order || itemIndex + 1;
           item.metadata = item.metadata || new Map();
-          
+
           if (item.fields) {
             item.fields = this.validateFields(item.fields);
           }
-          
+
           return item;
         });
       }
-      
+
       return section;
     });
   }
@@ -412,7 +415,7 @@ class DynamicDataExtractor {
       field.isRequired = field.isRequired || false;
       field.isVisible = field.isVisible !== false;
       field.metadata = field.metadata || new Map();
-      
+
       return field;
     });
   }
@@ -426,7 +429,7 @@ class DynamicDataExtractor {
         }
       });
     }
-    
+
     // Clean up items
     if (sectionData.items) {
       sectionData.items.forEach(item => {
@@ -452,48 +455,48 @@ class DynamicDataExtractor {
 
   calculateConfidenceScore(sections) {
     if (!sections.length) return 0;
-    
+
     let totalScore = 0;
     let sectionCount = 0;
-    
+
     sections.forEach(section => {
       let sectionScore = 0.5; // Base score for detecting section
-      
+
       // Add score for fields
       if (section.fields && section.fields.length > 0) {
         sectionScore += 0.3;
-        
+
         // Bonus for required fields
         const requiredFields = section.fields.filter(f => f.isRequired);
         if (requiredFields.length > 0) {
           sectionScore += 0.1;
         }
       }
-      
+
       // Add score for items
       if (section.items && section.items.length > 0) {
         sectionScore += 0.2;
-        
+
         // Bonus for complete items
-        const completeItems = section.items.filter(item => 
+        const completeItems = section.items.filter(item =>
           item.fields && item.fields.every(f => f.value && f.value !== '')
         );
         if (completeItems.length > 0) {
           sectionScore += 0.1;
         }
       }
-      
+
       totalScore += Math.min(sectionScore, 1.0);
       sectionCount++;
     });
-    
+
     return Math.round((totalScore / sectionCount) * 100) / 100;
   }
 
   calculateCompletenessScore(sections) {
     let totalFields = 0;
     let filledFields = 0;
-    
+
     sections.forEach(section => {
       if (section.fields) {
         section.fields.forEach(field => {
@@ -503,7 +506,7 @@ class DynamicDataExtractor {
           }
         });
       }
-      
+
       if (section.items) {
         section.items.forEach(item => {
           if (item.fields) {
@@ -517,13 +520,13 @@ class DynamicDataExtractor {
         });
       }
     });
-    
+
     return totalFields > 0 ? Math.round((filledFields / totalFields) * 100) : 0;
   }
 
   countTotalFields(sections) {
     let count = 0;
-    
+
     sections.forEach(section => {
       if (section.fields) count += section.fields.length;
       if (section.items) {
@@ -532,14 +535,14 @@ class DynamicDataExtractor {
         });
       }
     });
-    
+
     return count;
   }
 
   generateFallbackStructureAnalysis(resumeText) {
     const words = resumeText.toLowerCase();
     const detectedSections = [];
-    
+
     // Basic pattern detection
     Object.entries(this.sectionPatterns).forEach(([type, patterns]) => {
       const found = patterns.some(pattern => words.includes(pattern));
@@ -554,7 +557,7 @@ class DynamicDataExtractor {
         });
       }
     });
-    
+
     return {
       detectedSections,
       overallStructure: 'traditional',
@@ -590,14 +593,14 @@ class DynamicDataExtractor {
   // Convert old static portfolio format to dynamic format
   convertStaticToDynamic(staticData) {
     const sections = [];
-    
+
     // Personal Information
     const personalFields = [];
     if (staticData.name) personalFields.push({ key: 'name', value: staticData.name, type: 'text', displayName: 'Name', order: 1 });
     if (staticData.email) personalFields.push({ key: 'email', value: staticData.email, type: 'email', displayName: 'Email', order: 2 });
     if (staticData.phone) personalFields.push({ key: 'phone', value: staticData.phone, type: 'phone', displayName: 'Phone', order: 3 });
     if (staticData.address) personalFields.push({ key: 'address', value: staticData.address, type: 'text', displayName: 'Address', order: 4 });
-    
+
     if (personalFields.length > 0) {
       sections.push({
         id: 'personal',
@@ -609,7 +612,7 @@ class DynamicDataExtractor {
         items: []
       });
     }
-    
+
     // Summary
     if (staticData.summary) {
       sections.push({
@@ -622,7 +625,7 @@ class DynamicDataExtractor {
         items: []
       });
     }
-    
+
     // Skills
     if (staticData.skills && staticData.skills.length > 0) {
       sections.push({
@@ -635,7 +638,7 @@ class DynamicDataExtractor {
         items: []
       });
     }
-    
+
     // Experience
     if (staticData.experience && staticData.experience.length > 0) {
       const experienceItems = staticData.experience.map((exp, index) => ({
@@ -648,7 +651,7 @@ class DynamicDataExtractor {
           { key: 'description', value: exp.description, type: 'richtext', displayName: 'Description', order: 4 }
         ]
       }));
-      
+
       sections.push({
         id: 'experience',
         title: 'Work Experience',
@@ -659,7 +662,7 @@ class DynamicDataExtractor {
         items: experienceItems
       });
     }
-    
+
     // Education
     if (staticData.education && staticData.education.length > 0) {
       const educationItems = staticData.education.map((edu, index) => ({
@@ -672,7 +675,7 @@ class DynamicDataExtractor {
           { key: 'grade', value: edu.grade, type: 'text', displayName: 'Grade', order: 4 }
         ]
       }));
-      
+
       sections.push({
         id: 'education',
         title: 'Education',
@@ -683,7 +686,7 @@ class DynamicDataExtractor {
         items: educationItems
       });
     }
-    
+
     // Projects
     if (staticData.projects && staticData.projects.length > 0) {
       const projectItems = staticData.projects.map((proj, index) => ({
@@ -696,7 +699,7 @@ class DynamicDataExtractor {
           { key: 'url', value: proj.url, type: 'url', displayName: 'Project URL', order: 4 }
         ]
       }));
-      
+
       sections.push({
         id: 'projects',
         title: 'Projects',
@@ -707,7 +710,7 @@ class DynamicDataExtractor {
         items: projectItems
       });
     }
-    
+
     return {
       sections,
       aiConfidence: 0.8,

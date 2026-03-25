@@ -2,13 +2,12 @@ import React from "react";
 import { FaEdit, FaSave, FaTimes } from "react-icons/fa";
 import { getThemeColors } from "../utils/themes";
 
-const EditButtons = ({ 
-  isEditing, 
-  handleEdit, 
-  handleSave, 
-  handleCancel, 
-  setEditData, 
-  editData,
+const EditButtons = ({
+  isEditing,
+  handleEdit,
+  handleSave,
+  handleCancel,
+  setEditData,
   currentTheme,
   theme: colorMode
 }) => {

@@ -2,7 +2,7 @@ import React from "react";
 import { FaExternalLinkAlt } from "react-icons/fa";
 import { getThemeColors } from "../utils/themes";
 
-const Projects = ({ displayData, isEditing, editData, handleArrayChange, currentTheme, theme: colorMode }) => {
+const Projects = ({ displayData, isEditing, handleArrayChange, currentTheme, theme: colorMode }) => {
   const themeColors = getThemeColors(currentTheme, colorMode);
   const accentColor = colorMode === 'light' ? themeColors.accent : themeColors.accentDark;
 
@@ -20,13 +20,13 @@ const Projects = ({ displayData, isEditing, editData, handleArrayChange, current
                   <input
                     type="text"
                     value={project.title || ''}
-                    onChange={(e) => handleArrayChange('projects', index, {...project, title: e.target.value})}
+                    onChange={(e) => handleArrayChange('projects', index, { ...project, title: e.target.value })}
                     className={`w-full text-lg font-semibold ${themeColors.text.primary[colorMode]} bg-transparent border-b ${themeColors.input[colorMode]} focus:outline-none focus:border-${accentColor}`}
                     placeholder="Project Title"
                   />
                   <textarea
                     value={project.description || ''}
-                    onChange={(e) => handleArrayChange('projects', index, {...project, description: e.target.value})}
+                    onChange={(e) => handleArrayChange('projects', index, { ...project, description: e.target.value })}
                     className={`w-full text-sm ${themeColors.text.secondary[colorMode]} bg-transparent border ${themeColors.input[colorMode]} rounded p-2 focus:outline-none focus:border-${accentColor} resize-none`}
                     placeholder="Project Description"
                     rows="3"
@@ -34,7 +34,7 @@ const Projects = ({ displayData, isEditing, editData, handleArrayChange, current
                   <input
                     type="url"
                     value={project.link || ''}
-                    onChange={(e) => handleArrayChange('projects', index, {...project, link: e.target.value})}
+                    onChange={(e) => handleArrayChange('projects', index, { ...project, link: e.target.value })}
                     className={`w-full text-sm text-${accentColor} bg-transparent border-b ${themeColors.input[colorMode]} focus:outline-none focus:border-${accentColor}`}
                     placeholder="Project URL"
                   />
@@ -48,9 +48,9 @@ const Projects = ({ displayData, isEditing, editData, handleArrayChange, current
                     {project.description}
                   </p>
                   {project.link && (
-                    <a 
-                      href={project.link} 
-                      target="_blank" 
+                    <a
+                      href={project.link}
+                      target="_blank"
                       rel="noopener noreferrer"
                       className={`inline-flex items-center text-${accentColor} hover:underline text-sm font-medium`}
                     >

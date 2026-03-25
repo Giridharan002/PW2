@@ -1,7 +1,7 @@
 import React from "react";
 import { getThemeColors } from "../utils/themes";
 
-const Certifications = ({ displayData, isEditing, editData, handleArrayChange, currentTheme, theme: colorMode }) => {
+const Certifications = ({ displayData, isEditing, handleArrayChange, currentTheme, theme: colorMode }) => {
   if (!displayData.certifications || displayData.certifications.length === 0) {
     return null;
   }
@@ -22,21 +22,21 @@ const Certifications = ({ displayData, isEditing, editData, handleArrayChange, c
                 <input
                   type="text"
                   value={cert.name || ''}
-                  onChange={(e) => handleArrayChange('certifications', index, {...cert, name: e.target.value})}
+                  onChange={(e) => handleArrayChange('certifications', index, { ...cert, name: e.target.value })}
                   className={`w-full text-base font-semibold ${themeColors.text.primary[colorMode]} bg-transparent border-b ${themeColors.input[colorMode]} focus:outline-none focus:border-${accentColor}`}
                   placeholder="Certification Name"
                 />
                 <input
                   type="text"
                   value={cert.issuer || ''}
-                  onChange={(e) => handleArrayChange('certifications', index, {...cert, issuer: e.target.value})}
+                  onChange={(e) => handleArrayChange('certifications', index, { ...cert, issuer: e.target.value })}
                   className={`w-full text-sm text-${accentColor} bg-transparent border-b ${themeColors.input[colorMode]} focus:outline-none focus:border-${accentColor}`}
                   placeholder="Issuing Organization"
                 />
                 <input
                   type="text"
                   value={cert.date || ''}
-                  onChange={(e) => handleArrayChange('certifications', index, {...cert, date: e.target.value})}
+                  onChange={(e) => handleArrayChange('certifications', index, { ...cert, date: e.target.value })}
                   className={`w-full text-sm ${themeColors.text.secondary[colorMode]} bg-transparent border-b ${themeColors.input[colorMode]} focus:outline-none focus:border-${accentColor}`}
                   placeholder="Date Obtained"
                 />

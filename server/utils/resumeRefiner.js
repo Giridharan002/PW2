@@ -73,7 +73,7 @@ function normalizeContacts(contacts = {}) {
 function cleanDescription(text) {
 	if (!text) return '';
 	// Normalize bullet separators
-	let t = String(text).replace(/\u2022|•|\-|–/g, '\n').replace(/\r/g, '');
+	let t = String(text).replace(/[\u2022•–-]/g, '\n').replace(/\r/g, '');
 	// Collapse multiple newlines
 	t = t.split(/\n+/).map(s => s.trim()).filter(Boolean).join('\n');
 	// Keep it within a reasonable length
@@ -83,7 +83,7 @@ function cleanDescription(text) {
 
 function refineWorkExperience(items = []) {
 	if (!Array.isArray(items)) return [];
-	return items.map((item, idx) => {
+	return items.map((item) => {
 		const refined = { ...item };
 		refined.company = (refined.company || '').trim();
 		refined.title = (refined.title || '').trim();

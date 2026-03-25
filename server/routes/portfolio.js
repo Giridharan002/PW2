@@ -127,7 +127,7 @@ Return only valid JSON, no additional text or formatting. Extract as much detail
 
       try {
         resumeData = JSON.parse(text);
-      } catch (e) {
+      } catch (_e) {
         console.warn('⚠️ AI returned invalid JSON. Attempting minimal fallback contact extraction.');
         resumeData = { header: { contacts: extractFallbackContacts(extractedText), skills: [] }, summary: '', workExperience: [], education: [] };
       }

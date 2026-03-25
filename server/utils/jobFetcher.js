@@ -1,5 +1,7 @@
 import axios from 'axios';
 import JobListing from '../models/JobListing.js';
+import { translate } from '@vitalets/google-translate-api';
+import linkedIn from 'linkedin-jobs-api';
 
 class JobFetcher {
   constructor() {
@@ -50,7 +52,7 @@ class JobFetcher {
    * Fetch jobs from ArbeitNow public API
    * Public API: https://www.arbeitnow.com/api/job-board-api
    */
-  async fetchArbeitNowJobs(filters = {}) {
+  async fetchArbeitNowJobs(_filters = {}) {
     try {
       console.log('🔄 Fetching jobs from ArbeitNow...');
       const url = 'https://www.arbeitnow.com/api/job-board-api';
@@ -79,11 +81,54 @@ class JobFetcher {
       return [];
     }
   }
+
+  /**
+   * Fetch jobs from LinkedIn using unofficial API
+   * Public API: linkedin-jobs-api package
+   */
+  async fetchLinkedInJobs(keyword) {
+    try {
+      console.log(`🔄 Fetching jobs from LinkedIn for: ${keyword}...`);
+      const queryOptions = {
+        keyword: keyword,
+        location: 'Remote',
+        dateSincePosted: 'past Week',
+        jobType: 'full time',
+        remoteFilter: 'remote',
+        limit: '10',
+        sortBy: 'recent'
+      };
+
+      const response = await linkedIn.query(queryOptions);
+      if (!response || !Array.isArray(response)) return [];
+
+      return response.map((job, idx) => ({
+        jobId: `linkedin-${job.jobUrl ? job.jobUrl.split('?')[0].split('-').pop() : (job.position + idx).replace(/\\s+/g, '')}`,
+        title: job.position,
+        company: job.company || 'Unknown',
+        location: job.location || 'Remote',
+        description: job.position + ' at ' + job.company, // API doesn't return full desc
+        sourceUrl: job.jobUrl,
+        source: 'LinkedIn',
+        jobType: 'Full-time',
+        postedDate: job.date ? new Date(job.date) : new Date(),
+        requiredSkills: this.extractSkillsFromDescription(job.position),
+        preferredSkills: [],
+        metadata: {
+          agoTime: job.agoTime,
+          salaryRange: job.salary
+        }
+      }));
+    } catch (error) {
+      console.error('❌ Error fetching LinkedIn jobs:', error.message || error);
+      return [];
+    }
+  }
   /**
    * Search for jobs across multiple APIs using search queries
-   * Optimized: Skip slow JSearch API and use fast public APIs instead
+   * Optimized: Parallel search across public boards and JSearch
    */
-  async searchJobs(searchQueries = []) {
+  async searchJobs(searchQueries = [], location = 'India') {
     if (searchQueries.length === 0) {
       searchQueries = [
         'Frontend Developer',
@@ -95,43 +140,39 @@ class JobFetcher {
     }
     let allJobs = [];
 
-    // Search per-title using Remotive's search parameter and filter ArbeitNow locally
-    console.log('🔍 Searching public boards for titles:', searchQueries.slice(0, 5).join(', '));
+    // 🔍 Search per-title using Remotive's search parameter and filter ArbeitNow locally
+    console.log(`🔍 Searching boards for titles: ${searchQueries.slice(0, 10).join(', ')} (Location: ${location})`);
 
     // Fetch ArbeitNow once (we'll filter titles locally)
     const arbeitnowCache = await this.fetchArbeitNowJobs();
 
-    for (const query of searchQueries.slice(0, 5)) {
+    for (const query of searchQueries.slice(0, 10)) {
       try {
-        console.log(`🔎 Querying Remotive for: ${query}`);
-        const remotiveResults = await this.fetchRemotiveJobs({ search: query });
+        console.log(`🔎 Querying Remotive, LinkedIn, and Indeed (via JSearch) for: ${query}`);
+
+        // 1. PUBLIC BOARDS (Fast)
+        const [remotiveResults, linkedinResults] = await Promise.all([
+          this.fetchRemotiveJobs({ search: query }),
+          this.fetchLinkedInJobs(query)
+        ]);
+
+        // 2. JSEARCH (Indeed/Naukri/Glassdoor)
+        // If we have a key, we use JSearch more proactively for better location targeting
+        let jsearchJobs = [];
+        if (process.env.JSEARCH_API_KEY) {
+          jsearchJobs = await this.fetchFromJSearchAPI(query, location || 'India');
+        }
 
         // Filter ArbeitNow results by title match (case-insensitive substring)
         const lowerQ = query.toLowerCase();
         const arbeitFiltered = (arbeitnowCache || []).filter(j => (j.title || '').toLowerCase().includes(lowerQ));
 
-        allJobs.push(...remotiveResults, ...arbeitFiltered);
+        allJobs.push(...remotiveResults, ...linkedinResults, ...arbeitFiltered, ...jsearchJobs);
 
-        // Stop early if we have enough matches
-        if (allJobs.length >= 30) break;
+        // Stop early if we have enough matches in one loop
+        if (allJobs.length >= 200) break;
       } catch (err) {
-        console.warn(`⚠️ Error searching for '${query}' on public boards:`, err?.message || err);
-      }
-    }
-
-    // If not enough results, optionally try JSearch as fallback for top 2 queries
-    if ((allJobs.length < 10) && process.env.JSEARCH_API_KEY) {
-      console.log('ℹ️ Not enough public matches, attempting JSearch fallback for top titles');
-      for (const query of searchQueries.slice(0, 2)) {
-        try {
-          const jobs = await Promise.race([
-            this.fetchFromJSearchAPI(query, 'Remote'),
-            new Promise((_, reject) => setTimeout(() => reject(new Error('JSearch timeout')), 10000))
-          ]);
-          allJobs.push(...jobs);
-        } catch (err) {
-          console.log(`⏭️ Skipping slow JSearch for: ${query}`);
-        }
+        console.warn(`⚠️ Error searching for '${query}':`, err?.message || err);
       }
     }
 
@@ -169,12 +210,12 @@ class JobFetcher {
       console.log(`🔄 Fetching ${position} jobs in ${location}...`);
 
       const url = 'https://jsearch.p.rapidapi.com/search';
-      
+
       const response = await axios.get(url, {
         params: {
           query: `${position} ${location}`,
           page: 1,
-          num_pages: 1,
+          num_pages: 3, // Increased from 1 to 3 to get more results
           ...filters
         },
         headers: {
@@ -226,7 +267,7 @@ class JobFetcher {
    */
   async fetchSampleJobs() {
     console.log('📝 Loading sample job listings...');
-    
+
     return [
       {
         jobId: 'sample-1',
@@ -326,16 +367,49 @@ Passion for UI/UX and web accessibility required.`,
    */
   async saveJobsToDB(jobs) {
     try {
-      console.log(`💾 Saving ${jobs.length} jobs to database...`);
-      
+      console.log(`💾 Saving & Translating ${jobs.length} jobs to database...`);
+
       const savedJobs = [];
+      const batchTranslate = async (text) => {
+        if (!text) return text;
+        try {
+          // Basic fast check to see if it even needs deep translation 
+          // If we pass an empty string or it's just a number, avoid API hit
+          if (text.length < 3) return text;
+          const result = await translate(text, { to: 'en' });
+          return result.text || text;
+        } catch (e) {
+          console.warn("⚠️ Translation warning:", e.message);
+          return text; // fallback to original if translation fails
+        }
+      };
+
       for (const job of jobs) {
         try {
+          // Check if we already have this job in the database.
+          // If we do, we might not need to translate it again unless it was updated.
+          const existingJob = await JobListing.findOne({ jobId: job.jobId });
+
+          let finalTitle = job.title;
+          let finalDescription = job.description;
+
+          // Only perform the expensive/network translation if it's a NEW job
+          if (!existingJob) {
+            finalTitle = await batchTranslate(job.title);
+            // description might be long HTML. The translate API handles HTML quite well natively.
+            finalDescription = await batchTranslate(job.description);
+          } else {
+            finalTitle = existingJob.title;
+            finalDescription = existingJob.description;
+          }
+
           // Upsert: update if exists, insert if not
           const saved = await JobListing.findOneAndUpdate(
             { jobId: job.jobId },
             {
               ...job,
+              title: finalTitle,
+              description: finalDescription,
               updatedAt: new Date(),
               isActive: true
             },
@@ -346,7 +420,7 @@ Passion for UI/UX and web accessibility required.`,
           console.warn(`⚠️ Error saving job ${job.jobId}:`, error.message);
         }
       }
-      
+
       console.log(`✅ Saved ${savedJobs.length} jobs to database`);
       return savedJobs;
     } catch (error) {
@@ -374,7 +448,7 @@ Passion for UI/UX and web accessibility required.`,
    */
   async fetchAndCacheJobs(forceRefresh = false) {
     const cacheKey = 'jobs-cache';
-    
+
     // Check cache
     if (!forceRefresh && this.cache.has(cacheKey)) {
       const cachedData = this.cache.get(cacheKey);
@@ -386,14 +460,14 @@ Passion for UI/UX and web accessibility required.`,
 
     // Fetch fresh data
     console.log('🔄 Fetching fresh job listings...');
-    
+
     let jobs = [];
 
     // Try search APIs first (with JSearch or public APIs)
     try {
       const searchResults = await this.searchJobs();
       jobs = [...jobs, ...searchResults];
-    } catch (err) {
+    } catch (_err) {
       console.warn('⚠️ Search API fetch failed, continuing...');
     }
 
@@ -401,21 +475,21 @@ Passion for UI/UX and web accessibility required.`,
     try {
       const remotiveJobs = await this.fetchRemotiveJobs();
       jobs = [...jobs, ...remotiveJobs];
-    } catch (err) {
+    } catch (_err) {
       console.warn('⚠️ Remotive fetch failed, continuing...');
     }
 
     try {
       const arbeitJobs = await this.fetchArbeitNowJobs();
       jobs = [...jobs, ...arbeitJobs];
-    } catch (err) {
+    } catch (_err) {
       console.warn('⚠️ ArbeitNow fetch failed, continuing...');
     }
 
     try {
       const githubJobs = await this.fetchGitHubJobs();
       jobs = [...jobs, ...githubJobs];
-    } catch (error) {
+    } catch (_error) {
       console.warn('⚠️ GitHub Jobs fetch failed, continuing...');
     }
 
@@ -446,7 +520,7 @@ Passion for UI/UX and web accessibility required.`,
       const result = await JobListing.deleteMany({
         postedDate: { $lt: expiryDate }
       });
-      
+
       console.log(`🧹 Cleaned up ${result.deletedCount} old job listings`);
       return result.deletedCount;
     } catch (error) {

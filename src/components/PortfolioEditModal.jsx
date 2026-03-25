@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { FaTimes, FaSave, FaUser, FaBriefcase, FaGraduationCap, FaProjectDiagram, FaCertificate, FaTrophy } from 'react-icons/fa';
 
 const PortfolioEditModal = ({ portfolio, onSave, onClose, isOpen }) => {
-  if (!isOpen) return null;
   const [activeSection, setActiveSection] = useState('basic');
   const [editData, setEditData] = useState({
     title: portfolio?.title || 'Professional Portfolio',
@@ -28,6 +27,8 @@ const PortfolioEditModal = ({ portfolio, onSave, onClose, isOpen }) => {
 
   const [saving, setSaving] = useState(false);
 
+  if (!isOpen) return null;
+
   const sections = [
     { id: 'basic', name: 'Basic Info', icon: FaUser },
     { id: 'experience', name: 'Experience', icon: FaBriefcase },
@@ -49,13 +50,13 @@ const PortfolioEditModal = ({ portfolio, onSave, onClose, isOpen }) => {
   const addWorkExperience = () => {
     setEditData({
       ...editData,
-      workExperience: [...editData.workExperience, { 
-        company: '', 
-        title: '', 
-        location: '', 
+      workExperience: [...editData.workExperience, {
+        company: '',
+        title: '',
+        location: '',
         contract: 'Full-time',
-        start: '', 
-        end: '', 
+        start: '',
+        end: '',
         description: '',
         link: ''
       }]
@@ -103,10 +104,10 @@ const PortfolioEditModal = ({ portfolio, onSave, onClose, isOpen }) => {
     };
     setEditData({
       ...editData,
-      extraSections: [...editData.extraSections, { 
-        key: `${sectionType}-${Date.now()}`, 
-        title: sectionTitles[sectionType] || 'New Section', 
-        items: [] 
+      extraSections: [...editData.extraSections, {
+        key: `${sectionType}-${Date.now()}`,
+        title: sectionTitles[sectionType] || 'New Section',
+        items: []
       }]
     });
   };
@@ -119,10 +120,10 @@ const PortfolioEditModal = ({ portfolio, onSave, onClose, isOpen }) => {
 
   const addExtraItem = (sectionIndex) => {
     const updated = [...editData.extraSections];
-    updated[sectionIndex].items.push({ 
-      title: '', 
-      name: '', 
-      description: '', 
+    updated[sectionIndex].items.push({
+      title: '',
+      name: '',
+      description: '',
       link: '',
       venue: '',
       year: '',
@@ -133,9 +134,9 @@ const PortfolioEditModal = ({ portfolio, onSave, onClose, isOpen }) => {
 
   const updateExtraItem = (sectionIndex, itemIndex, field, value) => {
     const updated = [...editData.extraSections];
-    updated[sectionIndex].items[itemIndex] = { 
-      ...updated[sectionIndex].items[itemIndex], 
-      [field]: value 
+    updated[sectionIndex].items[itemIndex] = {
+      ...updated[sectionIndex].items[itemIndex],
+      [field]: value
     };
     setEditData({ ...editData, extraSections: updated });
   };
@@ -196,11 +197,10 @@ const PortfolioEditModal = ({ portfolio, onSave, onClose, isOpen }) => {
                     <button
                       key={section.id}
                       onClick={() => setActiveSection(section.id)}
-                      className={`w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 transition-colors ${
-                        activeSection === section.id
-                          ? 'bg-blue-100 text-blue-700 font-medium'
-                          : 'text-gray-700 hover:bg-gray-100'
-                      }`}
+                      className={`w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 transition-colors ${activeSection === section.id
+                        ? 'bg-blue-100 text-blue-700 font-medium'
+                        : 'text-gray-700 hover:bg-gray-100'
+                        }`}
                     >
                       <Icon className="text-lg" />
                       {section.name}
@@ -346,12 +346,12 @@ const PortfolioEditModal = ({ portfolio, onSave, onClose, isOpen }) => {
                       <input
                         type="text"
                         value={editData.header.skills.join(', ')}
-                        onChange={(e) => setEditData({ 
-                          ...editData, 
-                          header: { 
-                            ...editData.header, 
-                            skills: e.target.value.split(',').map(s => s.trim()).filter(Boolean) 
-                          } 
+                        onChange={(e) => setEditData({
+                          ...editData,
+                          header: {
+                            ...editData.header,
+                            skills: e.target.value.split(',').map(s => s.trim()).filter(Boolean)
+                          }
                         })}
                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         placeholder="Python, React, Node.js, AI, Machine Learning"
@@ -538,7 +538,7 @@ const PortfolioEditModal = ({ portfolio, onSave, onClose, isOpen }) => {
                   <div className="space-y-6">
                     {editData.extraSections
                       .filter(section => section.key.includes(activeSection) || section.title.toLowerCase().includes(activeSection))
-                      .map((section, sIndex) => {
+                      .map((section) => {
                         const actualIndex = editData.extraSections.indexOf(section);
                         return (
                           <div key={actualIndex} className="border rounded-lg p-6 bg-gray-50">
@@ -606,13 +606,13 @@ const PortfolioEditModal = ({ portfolio, onSave, onClose, isOpen }) => {
                         );
                       })}
 
-                    {editData.extraSections.filter(section => 
+                    {editData.extraSections.filter(section =>
                       section.key.includes(activeSection) || section.title.toLowerCase().includes(activeSection)
                     ).length === 0 && (
-                      <div className="text-center py-12 text-gray-500">
-                        <p>No {activeSection} added yet</p>
-                      </div>
-                    )}
+                        <div className="text-center py-12 text-gray-500">
+                          <p>No {activeSection} added yet</p>
+                        </div>
+                      )}
                   </div>
                 </div>
               )}

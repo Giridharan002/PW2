@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { FaEye, FaEdit, FaTrash, FaCopy, FaShare, FaDownload, FaPalette, FaCog, FaArrowLeft, FaExclamationTriangle, FaGlobe, FaEnvelope, FaPhone, FaTwitter, FaLinkedin, FaGithub } from 'react-icons/fa';
+import { FaEye, FaEdit, FaCopy, FaShare, FaDownload, FaArrowLeft, FaExclamationTriangle, FaGlobe, FaEnvelope, FaPhone, FaTwitter, FaLinkedin, FaGithub } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext.jsx';
 import portfolioService from '../services/portfolioService.js';
 import { API_BASE_URL } from '../config/api.js';
@@ -8,7 +8,7 @@ import { getThemeColors } from '../utils/themes';
 import PortfolioCustomizer from './PortfolioCustomizer.jsx';
 import PortfolioEditModal from './PortfolioEditModal.jsx';
 
-const PortfolioDisplay = ({ portfolio: propPortfolio, onEdit, onDelete, onDuplicate }) => {
+const PortfolioDisplay = ({ portfolio: propPortfolio }) => {
     const { user, loading: authLoading } = useAuth();
     const { portfolioId, slug } = useParams();
     const navigate = useNavigate();
@@ -24,7 +24,6 @@ const PortfolioDisplay = ({ portfolio: propPortfolio, onEdit, onDelete, onDuplic
 
     // Local edit state
     const [isEditing, setIsEditing] = useState(false);
-    const [saving, setSaving] = useState(false);
     const [editData, setEditData] = useState(null);
 
     // Customization state
@@ -191,59 +190,7 @@ const PortfolioDisplay = ({ portfolio: propPortfolio, onEdit, onDelete, onDuplic
         }
     };
 
-    const handleCancelEdit = () => {
-        // Reset edits to current portfolio values
-        if (portfolio) {
-            setEditData({
-                header: {
-                    name: portfolio.header?.name || '',
-                    shortAbout: portfolio.header?.shortAbout || '',
-                    location: portfolio.header?.location || '',
-                    contacts: {
-                        website: portfolio.header?.contacts?.website || '',
-                        email: portfolio.header?.contacts?.email || '',
-                        phone: portfolio.header?.contacts?.phone || '',
-                        twitter: portfolio.header?.contacts?.twitter || '',
-                        linkedin: portfolio.header?.contacts?.linkedin || '',
-                        github: portfolio.header?.contacts?.github || ''
-                    },
-                    skills: Array.isArray(portfolio.header?.skills) ? portfolio.header.skills : []
-                },
-                summary: portfolio.summary || ''
-            });
-        }
-        setIsEditing(false);
-    };
 
-    const handleSaveEdit = async () => {
-        if (!user || !portfolio) return;
-        setSaving(true);
-        try {
-            const payload = {
-                header: {
-                    ...(portfolio.header || {}),
-                    name: editData.header.name,
-                    shortAbout: editData.header.shortAbout,
-                    location: editData.header.location,
-                    contacts: { ...(portfolio.header?.contacts || {}), ...editData.header.contacts },
-                    skills: Array.isArray(editData.header.skills) ? editData.header.skills : []
-                },
-                summary: editData.summary,
-                workExperience: Array.isArray(editData.workExperience) ? editData.workExperience : [],
-                education: Array.isArray(editData.education) ? editData.education : [],
-                extraSections: Array.isArray(editData.extraSections) ? editData.extraSections : []
-            };
-            const resp = await portfolioService.updatePortfolio(user.sessionId, portfolio._id, payload);
-            if (resp.success && resp.portfolio) {
-                setPortfolio(resp.portfolio);
-                setIsEditing(false);
-            }
-        } catch (e) {
-            console.error('Failed to save edits', e);
-        } finally {
-            setSaving(false);
-        }
-    };
 
     // Helpers to update arrays
     const updateWorkField = (index, key, value) => {
@@ -341,21 +288,7 @@ const PortfolioDisplay = ({ portfolio: propPortfolio, onEdit, onDelete, onDuplic
         });
     };
 
-    const handleTogglePublish = async () => {
-        if (!portfolio) return;
 
-        setIsUpdating(true);
-        try {
-            const response = await portfolioService.togglePublish(user.sessionId, portfolio._id, !isPublished);
-            if (response.success) {
-                setIsPublished(!isPublished);
-            }
-        } catch (error) {
-            console.error('Failed to update publish status:', error);
-        } finally {
-            setIsUpdating(false);
-        }
-    };
 
     const openPhotoPicker = () => {
         if (fileInputRef.current) fileInputRef.current.click();
@@ -492,9 +425,9 @@ const PortfolioDisplay = ({ portfolio: propPortfolio, onEdit, onDelete, onDuplic
         <div className="min-h-screen" style={{ backgroundColor: customization.colors.bodyBg }}>
             {/* Customization Header - Only show for portfolio ID routes */}
             {portfolioId && <PortfolioCustomizer onApplyCustomization={handleApplyCustomization} />}
-            
+
             {/* Header */}
-            <div 
+            <div
                 className={`bg-gradient-to-br ${customization.theme.gradient} text-white shadow-lg`}
                 style={{ backgroundColor: customization.colors.headerBg }}
             >
@@ -513,20 +446,20 @@ const PortfolioDisplay = ({ portfolio: propPortfolio, onEdit, onDelete, onDuplic
                                 />
                             )}
                             <div>
-                                <h1 
-                                    className="text-3xl font-bold" 
+                                <h1
+                                    className="text-3xl font-bold"
                                     style={{ color: customization.colors.heading }}
                                 >
                                     {portfolio.header?.name || portfolio.title}
                                 </h1>
-                                <p 
+                                <p
                                     className="opacity-90 mt-2"
                                     style={{ color: customization.colors.subheading }}
                                 >
                                     {portfolio.header?.shortAbout || 'Professional Portfolio'}
                                 </p>
                                 {portfolio.header?.location && (
-                                    <p 
+                                    <p
                                         className="opacity-80 mt-1"
                                         style={{ color: customization.colors.paragraph }}
                                     >
@@ -548,11 +481,10 @@ const PortfolioDisplay = ({ portfolio: propPortfolio, onEdit, onDelete, onDuplic
                                 <button
                                     onClick={openPhotoPicker}
                                     disabled={isUploadingPhoto}
-                                    className={`px-4 py-2 rounded-lg font-medium transition-colors shadow-md ${
-                                        isUploadingPhoto 
-                                            ? 'bg-gray-400 text-white cursor-not-allowed' 
-                                            : 'bg-white hover:bg-gray-50'
-                                    }`}
+                                    className={`px-4 py-2 rounded-lg font-medium transition-colors shadow-md ${isUploadingPhoto
+                                        ? 'bg-gray-400 text-white cursor-not-allowed'
+                                        : 'bg-white hover:bg-gray-50'
+                                        }`}
                                     style={{ color: isUploadingPhoto ? '#fff' : customization.colors.heading }}
                                 >
                                     {isUploadingPhoto ? 'Uploading...' : (portfolio.header?.photoUrl ? 'Change Photo' : 'Upload Photo')}
@@ -565,9 +497,9 @@ const PortfolioDisplay = ({ portfolio: propPortfolio, onEdit, onDelete, onDuplic
 
             {/* Portfolio Content */}
             <div className="max-w-7xl mx-auto px-4 py-8">
-                <div 
+                <div
                     className={`rounded-lg shadow-sm border template-${customization.template} ${customization.theme.bg}`}
-                    style={{ 
+                    style={{
                         backgroundColor: customization.colors.bodyBg,
                         borderColor: customization.colors.paragraph + '40'
                     }}
@@ -749,8 +681,8 @@ const PortfolioDisplay = ({ portfolio: propPortfolio, onEdit, onDelete, onDuplic
                     {/* Contact Information */}
                     {portfolio.header?.contacts && (
                         <div className="p-6 border-b" style={{ borderColor: customization.colors.paragraph + '20' }}>
-                            <h2 
-                                className="text-xl font-semibold mb-4" 
+                            <h2
+                                className="text-xl font-semibold mb-4"
                                 style={{ color: customization.colors.heading }}
                             >
                                 Contact Information
@@ -965,7 +897,7 @@ const PortfolioDisplay = ({ portfolio: propPortfolio, onEdit, onDelete, onDuplic
                             </div>
                             <h2 className="text-3xl font-bold text-gray-900 mb-3">Portfolio Deployed Successfully!</h2>
                             <p className="text-gray-600 mb-6">Your portfolio is now live and accessible from anywhere.</p>
-                            
+
                             <div className="bg-gray-50 rounded-lg p-6 mb-6">
                                 <label className="block text-sm font-medium text-gray-700 mb-3">Your Portable Link:</label>
                                 <div className="flex items-center gap-3">

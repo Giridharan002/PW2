@@ -5,7 +5,7 @@ class DataValidator {
       optional: ['phone', 'address', 'summary'],
       arrays: ['skills', 'experience', 'education', 'projects']
     };
-    
+
     this.fieldTypes = {
       email: 'email',
       phone: 'phone',
@@ -156,8 +156,8 @@ class DataValidator {
 
   isValidPhone(phone) {
     // Basic phone validation - accepts various formats
-    const phoneRegex = /^[\+]?[1-9][\d]{0,15}$/;
-    const cleanPhone = phone.replace(/[\s\-\(\)]/g, '');
+    const phoneRegex = /^[+]?[1-9]\d{0,15}$/;
+    const cleanPhone = phone.replace(/[\s\-()]/g, '');
     return phoneRegex.test(cleanPhone) && cleanPhone.length >= 10;
   }
 
@@ -191,7 +191,7 @@ class DataValidator {
     return Math.round((filledFields / totalFields) * 100);
   }
 
-  generateSuggestions(data, validation) {
+  generateSuggestions(data, _validation) {
     const suggestions = [];
 
     // Missing personal info suggestions

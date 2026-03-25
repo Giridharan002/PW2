@@ -1,7 +1,7 @@
 import React from "react";
 import { getThemeColors } from "../utils/themes";
 
-const Experience = ({ displayData, isEditing, editData, handleArrayChange, currentTheme, theme: colorMode }) => {
+const Experience = ({ displayData, isEditing, handleArrayChange, currentTheme, theme: colorMode }) => {
   if (!displayData.experience || displayData.experience.length === 0) {
     return null;
   }
@@ -22,27 +22,27 @@ const Experience = ({ displayData, isEditing, editData, handleArrayChange, curre
                 <input
                   type="text"
                   value={exp.title || ''}
-                  onChange={(e) => handleArrayChange('experience', index, {...exp, title: e.target.value})}
+                  onChange={(e) => handleArrayChange('experience', index, { ...exp, title: e.target.value })}
                   className={`w-full text-lg font-semibold ${themeColors.text.primary[colorMode]} bg-transparent border-b ${themeColors.input[colorMode]} focus:outline-none focus:border-${accentColor}`}
                   placeholder="Job Title"
                 />
                 <input
                   type="text"
                   value={exp.company || ''}
-                  onChange={(e) => handleArrayChange('experience', index, {...exp, company: e.target.value})}
+                  onChange={(e) => handleArrayChange('experience', index, { ...exp, company: e.target.value })}
                   className={`w-full text-base font-medium text-${accentColor} bg-transparent border-b ${themeColors.input[colorMode]} focus:outline-none focus:border-${accentColor}`}
                   placeholder="Company Name"
                 />
                 <input
                   type="text"
                   value={exp.duration || ''}
-                  onChange={(e) => handleArrayChange('experience', index, {...exp, duration: e.target.value})}
+                  onChange={(e) => handleArrayChange('experience', index, { ...exp, duration: e.target.value })}
                   className={`w-full text-sm ${themeColors.text.secondary[colorMode]} bg-transparent border-b ${themeColors.input[colorMode]} focus:outline-none focus:border-${accentColor}`}
                   placeholder="Duration"
                 />
                 <textarea
                   value={exp.description || ''}
-                  onChange={(e) => handleArrayChange('experience', index, {...exp, description: e.target.value})}
+                  onChange={(e) => handleArrayChange('experience', index, { ...exp, description: e.target.value })}
                   className={`w-full text-sm ${themeColors.text.secondary[colorMode]} bg-transparent border ${themeColors.input[colorMode]} rounded p-2 focus:outline-none focus:border-${accentColor} resize-none`}
                   placeholder="Job Description"
                   rows="3"

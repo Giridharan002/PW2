@@ -2,7 +2,7 @@ import React from "react";
 import { FaTimes } from "react-icons/fa";
 import { getThemeColors } from "../utils/themes";
 
-const Achievements = ({ displayData, isEditing, editData, handleArrayChange, addArrayItem, removeArrayItem, currentTheme, theme: colorMode }) => {
+const Achievements = ({ displayData, isEditing, handleArrayChange, addArrayItem, removeArrayItem, currentTheme, theme: colorMode }) => {
   if (!displayData.achievements || displayData.achievements.length === 0) {
     return null;
   }

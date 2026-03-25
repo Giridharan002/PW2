@@ -1,0 +1,80 @@
+================
+C:\Users\dharu\Desktop\one\Oneclickfolio\Oneclickfolio\server\index.js
+Line 86: 'next' is defined but never used.
+================
+C:\Users\dharu\Desktop\one\Oneclickfolio\Oneclickfolio\server\middleware\errorHandler.js
+Line 1: 'next' is defined but never used.
+================
+C:\Users\dharu\Desktop\one\Oneclickfolio\Oneclickfolio\server\routes\jobs.js
+Line 296: 'queries' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u.
+Line 366: Unnecessary escape character: \`.
+Line 366: Unnecessary escape character: \`.
+Line 366: Unnecessary escape character: \`.
+Line 366: Unnecessary escape character: \`.
+Line 366: Unnecessary escape character: \`.
+Line 366: Unnecessary escape character: \`.
+Line 366: Unnecessary escape character: \`.
+Line 366: Unnecessary escape character: \`.
+Line 366: Unnecessary escape character: \`.
+Line 367: Unnecessary escape character: \`.
+Line 367: Unnecessary escape character: \`.
+Line 367: Unnecessary escape character: \`.
+Line 367: Unnecessary escape character: \`.
+Line 367: Unnecessary escape character: \`.
+Line 367: Unnecessary escape character: \`.
+Line 367: Unnecessary escape character: \`.
+Line 367: Unnecessary escape character: \`.
+Line 367: Unnecessary escape character: \`.
+Line 376: 'llmError' is defined but never used.
+================
+C:\Users\dharu\Desktop\one\Oneclickfolio\Oneclickfolio\server\routes\portfolio.js
+Line 130: 'e' is defined but never used.
+================
+C:\Users\dharu\Desktop\one\Oneclickfolio\Oneclickfolio\server\routes\portfolio_backup.js
+Line 7: 'groqAI' is defined but never used. Allowed unused vars must match /^[A-Z_]/u.
+Line 627: 'e' is defined but never used.
+================
+C:\Users\dharu\Desktop\one\Oneclickfolio\Oneclickfolio\server\test-extraction.js
+Line 1: 'fs' is defined but never used. Allowed unused vars must match /^[A-Z_]/u.
+================
+C:\Users\dharu\Desktop\one\Oneclickfolio\Oneclickfolio\server\utils\dataValidator.js
+Line 159: Unnecessary escape character: \+.
+Line 160: Unnecessary escape character: \(.
+Line 160: Unnecessary escape character: \).
+Line 194: 'validation' is defined but never used.
+================
+C:\Users\dharu\Desktop\one\Oneclickfolio\Oneclickfolio\server\utils\dynamicDataExtractor.js
+Line 22: Unnecessary escape character: \+.
+Line 22: Unnecessary escape character: \(.
+Line 22: Unnecessary escape character: \).
+Line 24: Unnecessary escape character: \/.
+Line 24: Unnecessary escape character: \/.
+Line 24: Unnecessary escape character: \/.
+Line 24: Unnecessary escape character: \/.
+Line 29: 'partialData' is assigned a value but never used.
+Line 113: 'error' is defined but never used.
+Line 207: Unexpected control character(s) in regular expression: \x00, \x1f.
+Line 208: Unexpected control character(s) in regular expression: \x00, \x1f.
+Line 209: Unnecessary escape character: \/.
+Line 214: Unnecessary escape character: \[.
+================
+C:\Users\dharu\Desktop\one\Oneclickfolio\Oneclickfolio\server\utils\emailService.js
+Line 235: 'idx' is defined but never used.
+================
+C:\Users\dharu\Desktop\one\Oneclickfolio\Oneclickfolio\server\utils\jobFetcher.js
+Line 55: 'filters' is assigned a value but never used.
+Line 180: 'err' is defined but never used.
+Line 477: 'err' is defined but never used.
+Line 485: 'err' is defined but never used.
+Line 492: 'err' is defined but never used.
+Line 499: 'error' is defined but never used.
+================
+C:\Users\dharu\Desktop\one\Oneclickfolio\Oneclickfolio\server\utils\jobRecommendationService.js
+Line 201: Unnecessary escape character: \-.
+Line 205: Unnecessary escape character: \-.
+Line 388: 'radiusKm' is assigned a value but never used.
+================
+C:\Users\dharu\Desktop\one\Oneclickfolio\Oneclickfolio\server\utils\resumeRefiner.js
+Line 21: '_' is defined but never used.
+Line 76: Unnecessary escape character: \-.
+Line 86: 'idx' is defined but never used.

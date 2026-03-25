@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { FaPalette, FaChevronDown, FaCheck } from "react-icons/fa";
 import { themes } from "../utils/themes";
 
-const ThemeSelector = ({ currentTheme, onThemeChange, theme: colorMode }) => {
+const ThemeSelector = ({ currentTheme, onThemeChange }) => {
   const [isOpen, setIsOpen] = useState(false);
 
   const toggleDropdown = () => {
@@ -13,8 +13,6 @@ const ThemeSelector = ({ currentTheme, onThemeChange, theme: colorMode }) => {
     onThemeChange(themeKey);
     setIsOpen(false);
   };
-
-  const currentThemeData = themes[currentTheme];
 
   return (
     <div className="relative">
@@ -37,22 +35,20 @@ const ThemeSelector = ({ currentTheme, onThemeChange, theme: colorMode }) => {
                 <button
                   key={key}
                   onClick={() => handleThemeSelect(key)}
-                  className={`w-full flex items-center justify-between p-3 rounded-lg transition-all duration-200 ${
-                    currentTheme === key
+                  className={`w-full flex items-center justify-between p-3 rounded-lg transition-all duration-200 ${currentTheme === key
                       ? 'bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700'
                       : 'hover:bg-gray-50 dark:hover:bg-gray-700'
-                  }`}
+                    }`}
                 >
                   <div className="flex items-center space-x-3">
-                    <div 
+                    <div
                       className={`w-4 h-4 rounded-full bg-gradient-to-r ${theme.gradients.header}`}
                     ></div>
                     <div className="text-left">
-                      <div className={`text-sm font-medium ${
-                        currentTheme === key 
-                          ? 'text-blue-600 dark:text-blue-400' 
+                      <div className={`text-sm font-medium ${currentTheme === key
+                          ? 'text-blue-600 dark:text-blue-400'
                           : 'text-gray-900 dark:text-gray-100'
-                      }`}>
+                        }`}>
                         {theme.name}
                       </div>
                       <div className="text-xs text-gray-500 dark:text-gray-400">
@@ -72,8 +68,8 @@ const ThemeSelector = ({ currentTheme, onThemeChange, theme: colorMode }) => {
 
       {/* Backdrop to close dropdown when clicking outside */}
       {isOpen && (
-        <div 
-          className="fixed inset-0 z-10" 
+        <div
+          className="fixed inset-0 z-10"
           onClick={() => setIsOpen(false)}
         />
       )}

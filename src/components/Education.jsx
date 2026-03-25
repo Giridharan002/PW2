@@ -1,7 +1,7 @@
 import React from "react";
 import { getThemeColors } from "../utils/themes";
 
-const Education = ({ displayData, isEditing, editData, handleArrayChange, currentTheme, theme: colorMode }) => {
+const Education = ({ displayData, isEditing, handleArrayChange, currentTheme, theme: colorMode }) => {
   const themeColors = getThemeColors(currentTheme, colorMode);
   const accentColor = colorMode === 'light' ? themeColors.accent : themeColors.accentDark;
 
@@ -18,14 +18,14 @@ const Education = ({ displayData, isEditing, editData, handleArrayChange, curren
                 <input
                   type="text"
                   value={edu.degree || ''}
-                  onChange={(e) => handleArrayChange('education', index, {...edu, degree: e.target.value})}
+                  onChange={(e) => handleArrayChange('education', index, { ...edu, degree: e.target.value })}
                   className={`w-full text-lg font-semibold ${themeColors.text.primary[colorMode]} bg-transparent border-b ${themeColors.input[colorMode]} focus:outline-none focus:border-${accentColor}`}
                   placeholder="Degree/Qualification"
                 />
                 <input
                   type="text"
                   value={edu.institution || ''}
-                  onChange={(e) => handleArrayChange('education', index, {...edu, institution: e.target.value})}
+                  onChange={(e) => handleArrayChange('education', index, { ...edu, institution: e.target.value })}
                   className={`w-full text-base font-medium text-${accentColor} bg-transparent border-b ${themeColors.input[colorMode]} focus:outline-none focus:border-${accentColor}`}
                   placeholder="Institution"
                 />
@@ -33,14 +33,14 @@ const Education = ({ displayData, isEditing, editData, handleArrayChange, curren
                   <input
                     type="text"
                     value={edu.duration || ''}
-                    onChange={(e) => handleArrayChange('education', index, {...edu, duration: e.target.value})}
+                    onChange={(e) => handleArrayChange('education', index, { ...edu, duration: e.target.value })}
                     className={`flex-1 text-sm ${themeColors.text.secondary[colorMode]} bg-transparent border-b ${themeColors.input[colorMode]} focus:outline-none focus:border-${accentColor}`}
                     placeholder="Duration"
                   />
                   <input
                     type="text"
                     value={edu.grade || ''}
-                    onChange={(e) => handleArrayChange('education', index, {...edu, grade: e.target.value})}
+                    onChange={(e) => handleArrayChange('education', index, { ...edu, grade: e.target.value })}
                     className={`flex-1 text-sm ${themeColors.text.secondary[colorMode]} bg-transparent border-b ${themeColors.input[colorMode]} focus:outline-none focus:border-${accentColor}`}
                     placeholder="Grade/Score"
                   />

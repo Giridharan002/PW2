@@ -3,34 +3,41 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Lazy initialization to avoid crash when RESEND_API_KEY is not set
+let resend = null;
+const getResend = () => {
+  if (!resend && process.env.RESEND_API_KEY) {
+    resend = new Resend(process.env.RESEND_API_KEY);
+  }
+  return resend;
+};
 
 // Fallback nodemailer for backward compatibility (if needed)
 const createTransporter = () => {
-    // This is now a fallback - Resend is the primary method
-    return null;
+  // This is now a fallback - Resend is the primary method
+  return null;
 };
 
 // Send OTP email
 export const sendOTPEmail = async (email, otp, name) => {
-    try {
-        const transporter = createTransporter();
+  try {
+    const transporter = createTransporter();
 
-        if (!transporter) {
-            // Fallback: log to console for testing
-            console.log('📧 [EMAIL FALLBACK] OTP Email would be sent:');
-            console.log('   To:', email);
-            console.log('   Name:', name);
-            console.log('   OTP Code:', otp);
-            console.log('   ⚠️ Configure EMAIL_USER and EMAIL_PASS in .env for real emails');
-            return { success: true, messageId: 'console-fallback' };
-        }
+    if (!transporter) {
+      // Fallback: log to console for testing
+      console.log('📧 [EMAIL FALLBACK] OTP Email would be sent:');
+      console.log('   To:', email);
+      console.log('   Name:', name);
+      console.log('   OTP Code:', otp);
+      console.log('   ⚠️ Configure EMAIL_USER and EMAIL_PASS in .env for real emails');
+      return { success: true, messageId: 'console-fallback' };
+    }
 
-        const mailOptions = {
-            from: process.env.EMAIL_USER || 'your-email@gmail.com',
-            to: email,
-            subject: 'Email Verification - Portfolio Creator',
-            html: `
+    const mailOptions = {
+      from: process.env.EMAIL_USER || 'your-email@gmail.com',
+      to: email,
+      subject: 'Email Verification - Portfolio Creator',
+      html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
           <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center; color: white;">
             <h1 style="margin: 0; font-size: 28px;">Portfolio Creator</h1>
@@ -68,32 +75,32 @@ export const sendOTPEmail = async (email, otp, name) => {
           </div>
         </div>
       `
-        };
+    };
 
-        const result = await transporter.sendMail(mailOptions);
-        console.log('✅ OTP email sent successfully to:', email);
-        return { success: true, messageId: result.messageId };
-    } catch (error) {
-        console.error('❌ Failed to send OTP email:', error);
-        return { success: false, error: error.message };
-    }
+    const result = await transporter.sendMail(mailOptions);
+    console.log('✅ OTP email sent successfully to:', email);
+    return { success: true, messageId: result.messageId };
+  } catch (error) {
+    console.error('❌ Failed to send OTP email:', error);
+    return { success: false, error: error.message };
+  }
 };
 
 // Send welcome email after verification
 export const sendWelcomeEmail = async (email, name) => {
-    try {
-        const transporter = createTransporter();
+  try {
+    const transporter = createTransporter();
 
-        if (!transporter) {
-            console.log('📧 [EMAIL FALLBACK] Welcome email would be sent to:', email);
-            return { success: true, messageId: 'console-fallback' };
-        }
+    if (!transporter) {
+      console.log('📧 [EMAIL FALLBACK] Welcome email would be sent to:', email);
+      return { success: true, messageId: 'console-fallback' };
+    }
 
-        const mailOptions = {
-            from: process.env.EMAIL_USER || 'your-email@gmail.com',
-            to: email,
-            subject: 'Welcome to Portfolio Creator!',
-            html: `
+    const mailOptions = {
+      from: process.env.EMAIL_USER || 'your-email@gmail.com',
+      to: email,
+      subject: 'Welcome to Portfolio Creator!',
+      html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
           <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center; color: white;">
             <h1 style="margin: 0; font-size: 28px;">Welcome to Portfolio Creator!</h1>
@@ -134,34 +141,34 @@ export const sendWelcomeEmail = async (email, name) => {
           </div>
         </div>
       `
-        };
+    };
 
-        const result = await transporter.sendMail(mailOptions);
-        console.log('✅ Welcome email sent successfully to:', email);
-        return { success: true, messageId: result.messageId };
-    } catch (error) {
-        console.error('❌ Failed to send welcome email:', error);
-        return { success: false, error: error.message };
-    }
+    const result = await transporter.sendMail(mailOptions);
+    console.log('✅ Welcome email sent successfully to:', email);
+    return { success: true, messageId: result.messageId };
+  } catch (error) {
+    console.error('❌ Failed to send welcome email:', error);
+    return { success: false, error: error.message };
+  }
 };
 
 // Send password reset email
 export const sendPasswordResetEmail = async (email, resetToken, name) => {
-    try {
-        const transporter = createTransporter();
+  try {
+    const transporter = createTransporter();
 
-        if (!transporter) {
-            console.log('📧 [EMAIL FALLBACK] Password reset email would be sent to:', email);
-            return { success: true, messageId: 'console-fallback' };
-        }
+    if (!transporter) {
+      console.log('📧 [EMAIL FALLBACK] Password reset email would be sent to:', email);
+      return { success: true, messageId: 'console-fallback' };
+    }
 
-        const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/reset-password?token=${resetToken}`;
+    const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/reset-password?token=${resetToken}`;
 
-        const mailOptions = {
-            from: process.env.EMAIL_USER || 'your-email@gmail.com',
-            to: email,
-            subject: 'Password Reset Request - Portfolio Creator',
-            html: `
+    const mailOptions = {
+      from: process.env.EMAIL_USER || 'your-email@gmail.com',
+      to: email,
+      subject: 'Password Reset Request - Portfolio Creator',
+      html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
           <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center; color: white;">
             <h1 style="margin: 0; font-size: 28px;">Password Reset</h1>
@@ -199,33 +206,33 @@ export const sendPasswordResetEmail = async (email, resetToken, name) => {
           </div>
         </div>
       `
-        };
+    };
 
-        const result = await transporter.sendMail(mailOptions);
-        console.log('✅ Password reset email sent successfully to:', email);
-        return { success: true, messageId: result.messageId };
-    } catch (error) {
-        console.error('❌ Failed to send password reset email:', error);
-        return { success: false, error: error.message };
-    }
+    const result = await transporter.sendMail(mailOptions);
+    console.log('✅ Password reset email sent successfully to:', email);
+    return { success: true, messageId: result.messageId };
+  } catch (error) {
+    console.error('❌ Failed to send password reset email:', error);
+    return { success: false, error: error.message };
+  }
 };
 
 // Send daily job digest email
 export const sendJobDigestEmail = async (email, name, jobs = []) => {
-    try {
-        if (!process.env.RESEND_API_KEY) {
-            console.log('⚠️ Resend API key not configured. Using console fallback.');
-            console.log('📧 [EMAIL FALLBACK] Job digest email would be sent to:', email);
-            console.log('   Jobs count:', jobs.length);
-            return { success: true, messageId: 'console-fallback' };
-        }
+  try {
+    if (!process.env.RESEND_API_KEY) {
+      console.log('⚠️ Resend API key not configured. Using console fallback.');
+      console.log('📧 [EMAIL FALLBACK] Job digest email would be sent to:', email);
+      console.log('   Jobs count:', jobs.length);
+      return { success: true, messageId: 'console-fallback' };
+    }
 
-        if (!jobs || jobs.length === 0) {
-            console.log('ℹ️ No new jobs to send to:', email);
-            return { success: true, messageId: 'no-jobs' };
-        }
+    if (!jobs || jobs.length === 0) {
+      console.log('ℹ️ No new jobs to send to:', email);
+      return { success: true, messageId: 'no-jobs' };
+    }
 
-        const jobsHtml = jobs.slice(0, 10).map((job, idx) => `
+    const jobsHtml = jobs.slice(0, 10).map((job) => `
             <div style="border: 1px solid #e0e0e0; border-radius: 8px; padding: 20px; margin-bottom: 15px; background: white;">
                 <h3 style="color: #667eea; margin: 0 0 10px 0; font-size: 18px;">${job.title || 'Job Title'}</h3>
                 <p style="color: #666; margin: 5px 0; font-weight: bold;">📍 ${job.company || 'Company Name'}</p>
@@ -235,7 +242,7 @@ export const sendJobDigestEmail = async (email, name, jobs = []) => {
             </div>
         `).join('');
 
-        const html = `
+    const html = `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
           <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center; color: white;">
             <h1 style="margin: 0; font-size: 28px;">💼 Your Daily Job Digest</h1>
@@ -274,22 +281,22 @@ export const sendJobDigestEmail = async (email, name, jobs = []) => {
         </div>
       `;
 
-        const result = await resend.emails.send({
-            from: 'OneClickFolio <onboarding@resend.dev>',
-            to: email,
-            subject: `Daily Job Digest - ${jobs.length} New Opportunities For You!`,
-            html: html
-        });
+    const result = await getResend().emails.send({
+      from: 'OneClickFolio <onboarding@resend.dev>',
+      to: email,
+      subject: `Daily Job Digest - ${jobs.length} New Opportunities For You!`,
+      html: html
+    });
 
-        if (result.error) {
-            console.error('❌ Resend error:', result.error);
-            return { success: false, error: result.error };
-        }
-
-        console.log('✅ Job digest email sent to:', email, `(${jobs.length} jobs)`);
-        return { success: true, messageId: result.data?.id, jobsCount: jobs.length };
-    } catch (error) {
-        console.error('❌ Failed to send job digest email:', error);
-        return { success: false, error: error.message };
+    if (result.error) {
+      console.error('❌ Resend error:', result.error);
+      return { success: false, error: result.error };
     }
+
+    console.log('✅ Job digest email sent to:', email, `(${jobs.length} jobs)`);
+    return { success: true, messageId: result.data?.id, jobsCount: jobs.length };
+  } catch (error) {
+    console.error('❌ Failed to send job digest email:', error);
+    return { success: false, error: error.message };
+  }
 };

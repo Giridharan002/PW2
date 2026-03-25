@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext.jsx';
 import { useNavigate } from 'react-router-dom';
 import portfolioService from '../services/portfolioService.js';
@@ -16,11 +16,7 @@ const Dashboard = () => {
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [activeTab, setActiveTab] = useState('portfolios'); // 'portfolios' or 'jobs'
 
-  useEffect(() => {
-    fetchPortfolios();
-  }, [user]);
-
-  const fetchPortfolios = async () => {
+  const fetchPortfolios = useCallback(async () => {
     try {
       setLoading(true);
       const response = await portfolioService.getUserPortfolios(user.sessionId);
@@ -28,11 +24,16 @@ const Dashboard = () => {
         setPortfolios(response.portfolios || []);
       }
     } catch (err) {
+      console.error('Error fetching portfolios:', err);
       setError(err.message);
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
+
+  useEffect(() => {
+    fetchPortfolios();
+  }, [fetchPortfolios]);
 
   const handleLogout = async () => {
     try {
@@ -160,22 +161,20 @@ const Dashboard = () => {
           <div className="flex gap-2 border-b border-gray-200">
             <button
               onClick={() => setActiveTab('portfolios')}
-              className={`px-4 py-3 font-medium border-b-2 transition-colors flex items-center gap-2 ${
-                activeTab === 'portfolios'
-                  ? 'text-blue-600 border-blue-600'
-                  : 'text-gray-600 border-transparent hover:text-gray-900'
-              }`}
+              className={`px-4 py-3 font-medium border-b-2 transition-colors flex items-center gap-2 ${activeTab === 'portfolios'
+                ? 'text-blue-600 border-blue-600'
+                : 'text-gray-600 border-transparent hover:text-gray-900'
+                }`}
             >
               <FaEye className="text-sm" />
               My Portfolios
             </button>
             <button
               onClick={() => setActiveTab('jobs')}
-              className={`px-4 py-3 font-medium border-b-2 transition-colors flex items-center gap-2 ${
-                activeTab === 'jobs'
-                  ? 'text-blue-600 border-blue-600'
-                  : 'text-gray-600 border-transparent hover:text-gray-900'
-              }`}
+              className={`px-4 py-3 font-medium border-b-2 transition-colors flex items-center gap-2 ${activeTab === 'jobs'
+                ? 'text-blue-600 border-blue-600'
+                : 'text-gray-600 border-transparent hover:text-gray-900'
+                }`}
             >
               <FaBriefcase className="text-sm" />
               Recommended Jobs
@@ -314,8 +313,8 @@ const Dashboard = () => {
             )}
           </>
         ) : (
-          <JobRecommendations 
-            sessionId={user?.sessionId} 
+          <JobRecommendations
+            sessionId={user?.sessionId}
             apiBaseUrl="http://localhost:5000"
           />
         )}

@@ -2,7 +2,7 @@ import React from "react";
 import { FaPalette, FaLayerGroup } from "react-icons/fa";
 import { themes } from "../utils/themes";
 
-const TopNav = ({ currentTheme, onThemeChange, theme: colorMode, selectedTemplate, onTemplateChange }) => {
+const TopNav = ({ currentTheme, onThemeChange, selectedTemplate, onTemplateChange }) => {
   const [isThemeOpen, setIsThemeOpen] = React.useState(false);
   const [isTemplateOpen, setIsTemplateOpen] = React.useState(false);
 
@@ -71,22 +71,20 @@ const TopNav = ({ currentTheme, onThemeChange, theme: colorMode, selectedTemplat
                       <button
                         key={key}
                         onClick={() => handleTemplateSelect(key)}
-                        className={`w-full flex items-center justify-between p-3 rounded-lg transition-all duration-200 ${
-                          selectedTemplate === key
+                        className={`w-full flex items-center justify-between p-3 rounded-lg transition-all duration-200 ${selectedTemplate === key
                             ? 'bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700'
                             : 'hover:bg-gray-50 dark:hover:bg-gray-700'
-                        }`}
+                          }`}
                       >
                         <div className="flex items-center space-x-3">
                           <div className="w-4 h-4 rounded bg-gray-300 dark:bg-gray-600 flex items-center justify-center">
                             <div className="w-2 h-2 bg-gray-600 dark:bg-gray-300 rounded"></div>
                           </div>
                           <div className="text-left">
-                            <div className={`text-sm font-medium ${
-                              selectedTemplate === key 
-                                ? 'text-blue-600 dark:text-blue-400' 
+                            <div className={`text-sm font-medium ${selectedTemplate === key
+                                ? 'text-blue-600 dark:text-blue-400'
                                 : 'text-gray-900 dark:text-gray-100'
-                            }`}>
+                              }`}>
                               {template.name}
                             </div>
                             <div className="text-xs text-gray-500 dark:text-gray-400">
@@ -127,22 +125,20 @@ const TopNav = ({ currentTheme, onThemeChange, theme: colorMode, selectedTemplat
                       <button
                         key={key}
                         onClick={() => handleThemeSelect(key)}
-                        className={`w-full flex items-center justify-between p-3 rounded-lg transition-all duration-200 ${
-                          currentTheme === key
+                        className={`w-full flex items-center justify-between p-3 rounded-lg transition-all duration-200 ${currentTheme === key
                             ? 'bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700'
                             : 'hover:bg-gray-50 dark:hover:bg-gray-700'
-                        }`}
+                          }`}
                       >
                         <div className="flex items-center space-x-3">
-                          <div 
+                          <div
                             className={`w-4 h-4 rounded-full bg-gradient-to-r ${theme.gradients.header}`}
                           ></div>
                           <div className="text-left">
-                            <div className={`text-sm font-medium ${
-                              currentTheme === key 
-                                ? 'text-blue-600 dark:text-blue-400' 
+                            <div className={`text-sm font-medium ${currentTheme === key
+                                ? 'text-blue-600 dark:text-blue-400'
                                 : 'text-gray-900 dark:text-gray-100'
-                            }`}>
+                              }`}>
                               {theme.name}
                             </div>
                             <div className="text-xs text-gray-500 dark:text-gray-400">
@@ -163,8 +159,8 @@ const TopNav = ({ currentTheme, onThemeChange, theme: colorMode, selectedTemplat
 
           {/* Backdrop to close dropdowns when clicking outside */}
           {(isThemeOpen || isTemplateOpen) && (
-            <div 
-              className="fixed inset-0 z-40" 
+            <div
+              className="fixed inset-0 z-40"
               onClick={() => {
                 setIsThemeOpen(false);
                 setIsTemplateOpen(false);

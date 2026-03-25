@@ -5,7 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
 import { API_BASE_URL } from '../config/api.js';
 
-const PDFUpload = ({ onDataExtracted, theme }) => {
+const PDFUpload = ({ onDataExtracted }) => {
   const { user } = useAuth();
   const [uploadedFile, setUploadedFile] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
