@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext.jsx';
 import { useNavigate } from 'react-router-dom';
 import portfolioService from '../services/portfolioService.js';
 import JobRecommendations from './JobRecommendations.jsx';
+import { API_BASE_URL } from '../config/api.js';
 import { FaPlus, FaEye, FaEdit, FaTrash, FaCopy, FaShare, FaDownload, FaPalette, FaCog, FaArrowRight, FaExclamationTriangle, FaCheck, FaTimes, FaUser, FaSignOutAlt, FaChevronDown, FaBriefcase } from 'react-icons/fa';
 
 const Dashboard = () => {
@@ -315,7 +316,7 @@ const Dashboard = () => {
         ) : (
           <JobRecommendations
             sessionId={user?.sessionId}
-            apiBaseUrl="http://localhost:5000"
+            apiBaseUrl={API_BASE_URL}
           />
         )}
       </div>

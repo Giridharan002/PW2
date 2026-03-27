@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
+import { API_BASE_URL } from '../config/api.js';
 import { FaBriefcase, FaMapMarkerAlt, FaBuilding, FaClock, FaExternalLinkAlt, FaChevronLeft, FaChevronRight, FaAngleDoubleLeft, FaAngleDoubleRight, FaFilter, FaStar, FaUserGraduate, FaUserTie, FaSyncAlt, FaSortAmountDown, FaSearch, FaTimes, FaArrowRight } from 'react-icons/fa';
 
-const JobRecommendations = ({ userId, sessionId, apiBaseUrl = 'http://localhost:5000' }) => {
+const JobRecommendations = ({ userId, sessionId, apiBaseUrl = API_BASE_URL }) => {
   const [recommendations, setRecommendations] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
