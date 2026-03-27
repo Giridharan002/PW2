@@ -32,7 +32,7 @@ export const GroqAIService = {
   // Model instance for backward compatibility with dynamicDataExtractor.js
   model: null,
 
-  async generateContent(prompt) {
+  async generateContent(prompt, options = {}) {
     try {
       console.log('🤖 Generating content with Groq AI...');
 
@@ -40,18 +40,37 @@ export const GroqAIService = {
         throw new Error("Groq client not initialized");
       }
 
-      const modelName = process.env.GROQ_MODEL || 'meta-llama/llama-4-maverick-17b-128e-instruct';
-      const message = await groq.chat.completions.create({
+      const modelName = process.env.GROQ_MODEL || 'openai/gpt-oss-120b';
+      const request = {
         model: modelName,
-        max_tokens: 2048,
-        temperature: 0.7,
+        max_tokens: options.maxTokens || 2048,
+        temperature: typeof options.temperature === 'number' ? options.temperature : 0.7,
         messages: [
           {
             role: "user",
             content: prompt
           }
         ]
-      });
+      };
+
+      // Ask the model for strict JSON when caller needs machine-parseable output
+      if (options.jsonMode) {
+        request.response_format = { type: 'json_object' };
+      }
+
+      let message;
+      try {
+        message = await groq.chat.completions.create(request);
+      } catch (err) {
+        // Some models may reject response_format; retry once without it.
+        if (options.jsonMode) {
+          console.warn('⚠️ JSON mode request failed, retrying without response_format');
+          delete request.response_format;
+          message = await groq.chat.completions.create(request);
+        } else {
+          throw err;
+        }
+      }
 
       const text = message.choices?.[0]?.message?.content || '';
 

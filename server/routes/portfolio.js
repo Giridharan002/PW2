@@ -9,6 +9,74 @@ import parseResumeFallback from '../utils/fallbackParser.js';
 
 const router = express.Router();
 
+function sanitizeAiJsonString(text = '') {
+  return text
+    .replace(/^```json\s*/i, '')
+    .replace(/^```\s*/i, '')
+    .replace(/\s*```$/i, '')
+    .replace(/[\u0000-\u001F\u007F-\u009F]/g, '')
+    .trim();
+}
+
+function extractFirstJsonObject(text = '') {
+  const start = text.indexOf('{');
+  if (start === -1) return '';
+
+  let depth = 0;
+  let inString = false;
+  let escaped = false;
+
+  for (let i = start; i < text.length; i++) {
+    const ch = text[i];
+
+    if (inString) {
+      if (escaped) {
+        escaped = false;
+      } else if (ch === '\\') {
+        escaped = true;
+      } else if (ch === '"') {
+        inString = false;
+      }
+      continue;
+    }
+
+    if (ch === '"') {
+      inString = true;
+      continue;
+    }
+
+    if (ch === '{') depth++;
+    if (ch === '}') depth--;
+
+    if (depth === 0) {
+      return text.slice(start, i + 1).trim();
+    }
+  }
+
+  return '';
+}
+
+function parseAiJsonResponse(rawText = '') {
+  const cleaned = sanitizeAiJsonString(rawText);
+  const candidates = [cleaned];
+
+  const extracted = extractFirstJsonObject(cleaned);
+  if (extracted && extracted !== cleaned) {
+    candidates.push(extracted);
+  }
+
+  for (const candidate of candidates) {
+    if (!candidate) continue;
+    try {
+      return JSON.parse(candidate);
+    } catch (_err) {
+      // continue to next strategy
+    }
+  }
+
+  throw new Error('AI response is not valid JSON');
+}
+
 // Create portfolio from PDF (self.so's exact approach)
 router.post('/user/:sessionId/portfolio', pdfUpload.single('file'), async (req, res) => {
   try {
@@ -106,7 +174,10 @@ ${extractedText}
 
 Return only valid JSON, no additional text or formatting. Extract as much detail as possible from the resume text.`;
 
-    const result = await groqAI.generateContent(prompt);
+    const result = await groqAI.generateContent(prompt, {
+      jsonMode: true,
+      temperature: 0.2
+    });
 
     let resumeData = {};
     if (result && result.rateLimited) {
@@ -115,20 +186,21 @@ Return only valid JSON, no additional text or formatting. Extract as much detail
       resumeData = await parseResumeFallback(extractedText);
     } else {
       const response = await result.response;
-      let text = response.text().trim();
-
-      // Clean up the response to ensure it's valid JSON
-      if (text.startsWith('```json')) {
-        text = text.replace(/```json\n?/, '').replace(/\n?```$/, '');
-      }
-      if (text.startsWith('```')) {
-        text = text.replace(/```\n?/, '').replace(/\n?```$/, '');
-      }
+      const text = response.text().trim();
 
       try {
-        resumeData = JSON.parse(text);
+        resumeData = parseAiJsonResponse(text);
       } catch (_e) {
-        console.warn('⚠️ AI returned invalid JSON. Attempting minimal fallback contact extraction.');
+        console.warn('⚠️ AI returned invalid JSON after cleanup. Attempting local parsing fallback.');
+        try {
+          resumeData = await parseResumeFallback(extractedText);
+        } catch (_fallbackError) {
+          console.warn('⚠️ Local parser fallback failed. Attempting minimal contact extraction.');
+          resumeData = { header: { contacts: extractFallbackContacts(extractedText), skills: [] }, summary: '', workExperience: [], education: [] };
+        }
+      }
+
+      if (!resumeData || typeof resumeData !== 'object') {
         resumeData = { header: { contacts: extractFallbackContacts(extractedText), skills: [] }, summary: '', workExperience: [], education: [] };
       }
 
